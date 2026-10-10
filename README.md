@@ -95,12 +95,28 @@ public/                     # favicon.svg, icon-*.png, apple-touch-icon.png, og-
 сайте это лайм, в светлой админке — тёмно-оливковый (`.theme-dark` / `.theme-light`
 в `app/globals.css`), чтобы текст акцентом читался на белом.
 
-## Деплой
+## Деплой (прод)
 
-`Dockerfile` + `docker-compose.yml` (приложение + Caddy с авто-TLS) + `Caddyfile`
-под `doccar.pro` / `www.doccar.pro`. Секреты — в `.env` рядом с compose.
-Порядок как у lenkrad: бэкап `data/` → выкладка исходников без `data/` и `.env`
-→ `docker compose build && docker compose up -d`. Не вешать сайт на IP VPN-ноды.
+Живёт на том же сервере, что lenkrad.ru: **135.106.175.41** (`ssh -i ~/.ssh/hvpn_deploy root@…`),
+каталог `/opt/doccar`, контейнер `doccar-app`. Своего Caddy нет — TLS и порты 80/443
+держит `lenkrad-caddy` (проект `/opt/lenkrad`); блок `doccar.pro` / `www.doccar.pro`
+лежит в Caddyfile Lenkrad (репо wastedovi4/lenkrad) и проксирует на `doccar-app:3000`
+по общей сети `lenkrad_web`. DNS — reg.ru (`ns1/ns2.hosting.reg.ru`).
+
+> **Имя сервиса в compose — `doccar`, не `app`.** Имя сервиса = DNS-алиас в общей
+> сети; одинаковый алиас `app` раскидал бы трафик lenkrad.ru на оба контейнера.
+
+Порядок выкладки:
+
+1. Сейф-копия `data/` и `.env` на сервере.
+2. Архив исходников без `node_modules`, `.next`, `.git`, `data`, `.env*` → `/opt/doccar`.
+3. `cd /opt/doccar && docker compose build && docker compose up -d`.
+4. Проверка: `docker exec lenkrad-caddy nslookup app` — ровно один IP (lenkrad-app);
+   https://doccar.pro и https://lenkrad.ru отдают каждый свой сайт.
+
+Правка Caddyfile Lenkrad: файл смонтирован одиночным bind-mount — писать на месте
+(`cat new > Caddyfile`, inode сохраняется), проверять `caddy validate`, применять
+`caddy reload`. Если файл пересоздан (scp/tar) — нужен `docker restart lenkrad-caddy`.
 
 ## TODO (нужны реальные данные)
 
@@ -108,4 +124,4 @@ public/                     # favicon.svg, icon-*.png, apple-touch-icon.png, og-
 - [ ] Точный адрес и координаты сервиса (сейчас — центр Одинцово)
 - [ ] Реальные фото: стартовые вырезаны из макета и имеют низкое разрешение
 - [ ] Страница политики обработки персональных данных (152-ФЗ) и ссылка на неё в форме
-- [ ] Сменить пароль админки на боевом сервере
+- [ ] Сменить пароль админки на боевом сервере (`/opt/doccar/.env`, затем «Сотрудники» в админке)

@@ -1,7 +1,15 @@
-# DOCCAR.PRO — деплой: Next.js за Caddy (авто-TLS Let's Encrypt).
-# Порты 80/443 наружу держит Caddy. Не размещать на IP VPN-ноды (веб-порты режутся).
+# DOCCAR.PRO — приложение (Next.js: сайт + админка + API).
+#
+# Своего Caddy нет: сервер общий с lenkrad.ru, порты 80/443 и TLS держит
+# контейнер lenkrad-caddy (проект /opt/lenkrad). Блок doccar.pro прописан в его
+# Caddyfile и проксирует на doccar-app:3000 по общей docker-сети lenkrad_web.
+# Не размещать на IP VPN-ноды (веб-порты режутся).
+#
+# ВАЖНО: имя сервиса — «doccar», НЕ «app». Имя сервиса становится DNS-алиасом в
+# общей сети lenkrad_web; сервис Lenkrad называется app, и одинаковый алиас
+# раскидал бы трафик lenkrad.ru на оба контейнера.
 services:
-  app:
+  doccar:
     build: .
     image: doccar-app:latest
     container_name: doccar-app
@@ -12,32 +20,16 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - ADMIN_SECRET=${ADMIN_SECRET}
     volumes:
-      # Персистентный контент из админки (источник правды в рантайме).
+      # Персистентные данные: контент, CRM, загруженные фото.
       - ./data:/app/data
     expose:
       - "3000"
+    # Потолок памяти — соседний lenkrad-app не должен страдать от этого контейнера.
+    mem_limit: 512m
     networks:
-      - web
-
-  caddy:
-    image: caddy:2-alpine
-    container_name: doccar-caddy
-    restart: unless-stopped
-    depends_on:
-      - app
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - web
+      - edge
 
 networks:
-  web:
-
-volumes:
-  caddy_data:
-  caddy_config:
+  edge:
+    external: true
+    name: lenkrad_web
