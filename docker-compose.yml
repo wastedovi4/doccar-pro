@@ -1,0 +1,43 @@
+# DOCCAR.PRO — деплой: Next.js за Caddy (авто-TLS Let's Encrypt).
+# Порты 80/443 наружу держит Caddy. Не размещать на IP VPN-ноды (веб-порты режутся).
+services:
+  app:
+    build: .
+    image: doccar-app:latest
+    container_name: doccar-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - ADMIN_LOGIN=${ADMIN_LOGIN}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_SECRET=${ADMIN_SECRET}
+    volumes:
+      # Персистентный контент из админки (источник правды в рантайме).
+      - ./data:/app/data
+    expose:
+      - "3000"
+    networks:
+      - web
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: doccar-caddy
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - web
+
+networks:
+  web:
+
+volumes:
+  caddy_data:
+  caddy_config:

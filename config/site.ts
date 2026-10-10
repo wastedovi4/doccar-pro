@@ -1,0 +1,30 @@
+/**
+ * Статика сайта (не редактируется из админки): навигация и построение ссылок на карты.
+ * Координаты сервиса — в контенте (админка → «Контакты»), сюда приходят аргументом.
+ *
+ * Редактируемый контент (контакты, услуги, тексты, SEO) — в lib/content-model.ts.
+ */
+import type { Geo } from "@/lib/content-model";
+
+export function mapLinks({ lat, lng }: Geo) {
+  // Окно карты вокруг точки: точка — ровно в центре (на неё ставится наш маркер).
+  const dLng = 0.045;
+  const dLat = 0.02;
+  return {
+    // Встроенная OpenStreetMap-карта (без ключей и внешних SDK), без родного маркера.
+    embed: `https://www.openstreetmap.org/export/embed.html?bbox=${lng - dLng}%2C${
+      lat - dLat
+    }%2C${lng + dLng}%2C${lat + dLat}&layer=mapnik`,
+    // Маршрут в Яндекс.Картах от «Моего местоположения» (пустая точка отправления «~»)
+    route: `https://yandex.ru/maps/?rtext=~${lat}%2C${lng}&rtt=auto`,
+  };
+}
+
+export const nav = [
+  { href: "#services", label: "Услуги", section: "services" },
+  { href: "#about", label: "О сервисе", section: "about" },
+  { href: "#contacts", label: "Контакты" },
+] as const;
+
+/** Якорь, который открывает окно записи (см. components/BookingDialog.tsx). */
+export const BOOKING_HREF = "#booking";

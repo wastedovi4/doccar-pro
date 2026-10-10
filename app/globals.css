@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /*
+   * Темы. Публичный сайт — тёмный (по умолчанию), админка — светлая.
+   * Значения — RGB-триплеты для rgb(var(--x) / alpha) в tailwind.config.ts.
+   */
+  :root,
+  .theme-dark {
+    --accent: 198 243 74; /* #C6F34A */
+    --accent-hover: 214 248 122; /* светлее — на тёмном фоне ховер «загорается» */
+    --on-accent: 16 19 24; /* #101318 */
+  }
+
+  .theme-light {
+    --accent: 77 124 15; /* #4D7C0F — контраст 5:1 на белом */
+    --accent-hover: 63 98 18; /* #3F6212 */
+    --on-accent: 255 255 255;
+  }
+
+  :root {
+    color-scheme: dark;
+  }
+
+  .theme-light {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-night text-frost antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Якорные ссылки не заезжают под фиксированную шапку */
+  section[id],
+  div[id] {
+    scroll-margin-top: 88px;
+  }
+
+  /* Видимый фокус для доступности */
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-night;
+  }
+
+  .theme-light :focus-visible {
+    @apply ring-offset-white;
+  }
+
+  ::selection {
+    background: rgb(198 243 74 / 0.35);
+    color: #fff;
+  }
+}
+
+@layer components {
+  /* Контейнер ширины контента */
+  .container-x {
+    @apply mx-auto w-full max-w-content px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Надзаголовок (uppercase технический стиль) */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-frost/60;
+  }
+
+  /* Короткая лаймовая черта над заголовком секции */
+  .rule {
+    @apply block h-[3px] w-10 rounded-full bg-accent;
+  }
+
+  /* Кнопки */
+  .btn {
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold
+           transition-colors duration-150 focus-visible:outline-none;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent text-on-accent hover:bg-accent-hover;
+  }
+
+  /* Контурная кнопка на тёмном фоне */
+  .btn-ghost {
+    @apply btn border border-frost/25 bg-transparent text-frost hover:border-accent hover:text-accent;
+  }
+
+  /* Контурная кнопка в светлой админке */
+  .btn-outline-light {
+    @apply btn border border-line bg-white text-graphite hover:border-accent hover:text-accent;
+  }
+
+  /* Карточка в светлой админке */
+  .card {
+    @apply rounded-xl border border-line bg-white p-6 transition-shadow duration-200;
+  }
+
+  /* Поверхность на тёмном сайте */
+  .panel {
+    @apply rounded-2xl border border-white/[0.08] bg-coal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
