@@ -135,6 +135,49 @@ const MIGRATIONS: string[] = [
   ALTER TABLE leads ADD COLUMN client_id TEXT REFERENCES clients(id) ON DELETE SET NULL;
   CREATE INDEX appt_client ON appointments (client_id);
   `,
+
+  // v3: работы и запчасти в наряде, отчёт механика, скидка, ссылка для клиента, рекомендации
+  `
+  CREATE TABLE work_order_lines (
+    id           TEXT PRIMARY KEY,
+    order_id     TEXT NOT NULL REFERENCES work_orders(id) ON DELETE CASCADE,
+    kind         TEXT NOT NULL CHECK (kind IN ('work', 'part')),
+    position     INTEGER NOT NULL,
+    name         TEXT NOT NULL,
+    article      TEXT NOT NULL DEFAULT '',          -- артикул / каталожный номер
+    qty          REAL NOT NULL DEFAULT 1 CHECK (qty > 0), -- работа: нормо-часы; запчасть: количество
+    unit         TEXT NOT NULL DEFAULT '',          -- н/ч, шт, л, компл
+    price        INTEGER CHECK (price IS NULL OR price >= 0), -- за единицу, копейки; NULL — не назначена
+    source       TEXT NOT NULL DEFAULT 'service' CHECK (source IN ('service', 'client')), -- запчасть клиента не тарифицируется
+    created_by   TEXT REFERENCES users(id) ON DELETE SET NULL,
+    created_at   TEXT NOT NULL
+  );
+  CREATE INDEX wol_order ON work_order_lines (order_id, kind, position);
+  CREATE INDEX wol_name ON work_order_lines (kind, name);
+
+  ALTER TABLE work_orders ADD COLUMN report TEXT NOT NULL DEFAULT '';          -- отчёт механика
+  ALTER TABLE work_orders ADD COLUMN discount INTEGER NOT NULL DEFAULT 0 CHECK (discount >= 0); -- копейки
+  ALTER TABLE work_orders ADD COLUMN public_token TEXT;                        -- ссылка для клиента (QR)
+  CREATE UNIQUE INDEX wo_public_token ON work_orders (public_token) WHERE public_token IS NOT NULL;
+
+  CREATE TABLE recommendations (
+    id                 TEXT PRIMARY KEY,
+    client_id          TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    vehicle_id         TEXT REFERENCES vehicles(id) ON DELETE CASCADE,
+    order_id           TEXT REFERENCES work_orders(id) ON DELETE SET NULL,  -- где выдана
+    text               TEXT NOT NULL,
+    priority           TEXT NOT NULL CHECK (priority IN ('urgent', 'soon', 'later')),
+    estimate           INTEGER CHECK (estimate IS NULL OR estimate >= 0),   -- ориентир, копейки
+    status             TEXT NOT NULL CHECK (status IN ('open', 'done', 'declined')),
+    resolved_order_id  TEXT REFERENCES work_orders(id) ON DELETE SET NULL,  -- где выполнена
+    created_by         TEXT REFERENCES users(id) ON DELETE SET NULL,
+    created_at         TEXT NOT NULL,
+    resolved_at        TEXT
+  );
+  CREATE INDEX rec_vehicle ON recommendations (vehicle_id, status);
+  CREATE INDEX rec_client ON recommendations (client_id, status);
+  CREATE INDEX rec_order ON recommendations (order_id);
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

@@ -66,6 +66,39 @@ export function woNumber(n: number): string {
   return `ЗН-${String(n).padStart(6, "0")}`;
 }
 
+/** Деньги: копейки → «12 345 ₽» / «12 345,50 ₽». */
+export function rub(kop: number | null | undefined): string {
+  if (kop === null || kop === undefined) return "";
+  const v = kop / 100;
+  return `${v.toLocaleString("ru-RU", { minimumFractionDigits: kop % 100 ? 2 : 0, maximumFractionDigits: 2 })} ₽`;
+}
+
+/** Ввод денег «1 234,5» / «1234.50» → копейки; пусто/мусор → null. */
+export function parseRub(raw: unknown): number | null {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === "number") return Number.isFinite(raw) && raw >= 0 ? Math.round(raw * 100) : null;
+  const s = String(raw).replace(/\s|₽|руб\.?/gi, "").replace(",", ".");
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
+}
+
+/** Копейки → строка для поля ввода: 150050 → «1500,5». */
+export function rubInput(kop: number | null | undefined): string {
+  if (kop === null || kop === undefined) return "";
+  return String(kop / 100).replace(".", ",");
+}
+
+/** Количество для людей: 1.5 → «1,5». */
+export function formatQty(q: number): string {
+  return q.toLocaleString("ru-RU", { maximumFractionDigits: 3 });
+}
+
+/** Сумма строки, копейки: qty × price с округлением. */
+export function lineAmount(qty: number, price: number | null | undefined): number {
+  return price === null || price === undefined ? 0 : Math.round(qty * price);
+}
+
 /** Пробег для людей: 123456 → «123 456 км». */
 export function formatMileage(km: number | null | undefined): string {
   return km || km === 0 ? `${km.toLocaleString("ru-RU")} км` : "";

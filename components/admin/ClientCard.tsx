@@ -4,13 +4,20 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Car, ClipboardPlus, Loader2, Pencil, Plus, Save, Trash2 } from "lucide-react";
-import type { Appointment, Client, Vehicle, WorkOrderView } from "@/lib/crm-types";
-import { formatMileage, isValidVin, plateDisplay, vehicleLabel, woNumber } from "@/lib/format";
+import type { Appointment, Client, Recommendation, Vehicle, WorkOrderView } from "@/lib/crm-types";
+import { PriorityChip } from "@/components/admin/OrderRecommendations";
+import { formatMileage, isValidVin, plateDisplay, rub, vehicleLabel, woNumber } from "@/lib/format";
 import { Modal, WoStatusChip, fmtDate, Label, crmInput } from "@/components/admin/ui";
 import { IntakeDialog } from "@/components/admin/IntakeDialog";
 import type { StaffLite } from "@/components/admin/AppointmentModal";
 
-type Card = { client: Client; vehicles: Vehicle[]; orders: WorkOrderView[]; appointments: Appointment[] };
+type Card = {
+  client: Client;
+  vehicles: Vehicle[];
+  orders: WorkOrderView[];
+  appointments: Appointment[];
+  recommendations: Recommendation[];
+};
 
 const APPT_LABEL: Record<Appointment["status"], string> = {
   scheduled: "Запланирована",
@@ -173,6 +180,29 @@ export function ClientCard({ id }: { id: string }) {
           )}
         </div>
       </div>
+
+      {card.recommendations.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 sm:p-5">
+          <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted">Открытые рекомендации</h2>
+          <ul className="space-y-2">
+            {card.recommendations.map((r) => {
+              const v = card.vehicles.find((x) => x.id === r.vehicleId);
+              return (
+                <li key={r.id} className="flex flex-wrap items-center gap-2 text-sm">
+                  <PriorityChip p={r.priority} />
+                  <span className="text-graphite">{r.text}</span>
+                  <span className="text-xs text-muted">
+                    {[v && vehicleLabel(v), r.orderNumber && woNumber(r.orderNumber), r.estimate !== undefined && `ориентир ${rub(r.estimate)}`]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-3 text-xs text-muted">Отметить выполненной можно в заказ-наряде при следующем визите.</p>
+        </div>
+      )}
 
       {/* История */}
       <div className="rounded-xl border border-line bg-white p-4 sm:p-5">

@@ -111,7 +111,64 @@ export type WorkOrderView = WorkOrder & {
   client: { id: string; name: string; phone?: string }; // телефон механику не отдаётся
   vehicle?: Pick<Vehicle, "id" | "make" | "model" | "year" | "plate" | "vin">;
   mechanicName?: string;
+  report: string; // отчёт механика: что сделано / выявлено
+  discount?: number; // копейки (механику не отдаётся)
+  publicToken?: string; // ссылка для клиента (механику не отдаётся)
 };
+
+/* ---------- работы, запчасти, рекомендации ---------- */
+
+export type LineKind = "work" | "part";
+
+export type WorkOrderLine = {
+  id: string;
+  orderId: string;
+  kind: LineKind;
+  position: number;
+  name: string;
+  article: string;
+  qty: number; // работа: нормо-часы; запчасть: количество
+  unit: string;
+  price?: number; // за единицу, копейки; нет — не назначена (механику не отдаётся)
+  source: "service" | "client";
+  createdAt: string;
+};
+
+export type RecPriority = "urgent" | "soon" | "later";
+export type RecStatus = "open" | "done" | "declined";
+
+export type Recommendation = {
+  id: string;
+  clientId: string;
+  vehicleId?: string;
+  orderId?: string;
+  orderNumber?: number;
+  text: string;
+  priority: RecPriority;
+  estimate?: number; // копейки (механику не отдаётся)
+  status: RecStatus;
+  resolvedOrderId?: string;
+  createdAt: string;
+  resolvedAt?: string;
+};
+
+export type OrderTotals = { works: number; parts: number; discount: number; total: number; unpriced: number };
+
+/** Полная карточка наряда. */
+export type WorkOrderDetail = WorkOrderView & {
+  lines: WorkOrderLine[];
+  recommendations: Recommendation[]; // выданные в этом наряде
+  carried: Recommendation[]; // открытые по этой машине из прошлых визитов (+ закрытые этим нарядом)
+  totals?: OrderTotals; // механику не отдаётся
+  locked: boolean; // выдан / отменён — правки закрыты
+};
+
+export const REC_PRIORITY_LABEL: Record<RecPriority, string> = {
+  urgent: "Срочно",
+  soon: "В ближайшее время",
+  later: "На следующем ТО",
+};
+export const REC_STATUS_LABEL: Record<RecStatus, string> = { open: "Открыта", done: "Выполнена", declined: "Отказ" };
 
 export const ROLES: Role[] = ["admin", "receiver", "mechanic"];
 export const LEAD_STATUSES: LeadStatus[] = ["new", "seen", "processed", "archived"];

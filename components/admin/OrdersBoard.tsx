@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Plus, ClipboardList } from "lucide-react";
+import { Loader2, Plus, ClipboardList, Check } from "lucide-react";
 import type { Role, WorkOrderView } from "@/lib/crm-types";
-import { vehicleLabel, woNumber } from "@/lib/format";
+import { parseRub, rub, rubInput, vehicleLabel, woNumber } from "@/lib/format";
 import { WoStatusChip, fmtDate } from "@/components/admin/ui";
 import { IntakeDialog } from "@/components/admin/IntakeDialog";
 import type { StaffLite } from "@/components/admin/AppointmentModal";
@@ -67,6 +67,8 @@ export function OrdersBoard({ role }: { role: Role }) {
         </div>
       </div>
 
+      {manager && <LaborRate canEdit={role === "admin"} />}
+
       {loading ? (
         <p className="flex items-center gap-2 text-sm text-muted">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Загрузка…
@@ -102,6 +104,64 @@ export function OrdersBoard({ role }: { role: Role }) {
       {intake && (
         <IntakeDialog staff={staff} onClose={() => setIntake(false)} onDone={(o) => router.push(`/admin/orders/${o.id}`)} />
       )}
+    </div>
+  );
+}
+
+/** Стоимость нормо-часа: подставляется в цену новых работ. Меняет владелец. */
+function LaborRate({ canEdit }: { canEdit: boolean }) {
+  const [rate, setRate] = useState<number | null>(null);
+  const [value, setValue] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.ok) return;
+        setRate(d.laborRate);
+        setValue(rubInput(d.laborRate));
+      });
+  }, []);
+
+  async function save() {
+    if ((parseRub(value) ?? null) === rate) return;
+    const d = await (
+      await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ laborRate: value }),
+      })
+    ).json();
+    if (d.ok) {
+      setRate(d.laborRate);
+      setValue(rubInput(d.laborRate));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    }
+  }
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5 text-sm">
+      <span className="text-muted">Стоимость нормо-часа:</span>
+      {canEdit ? (
+        <>
+          <input
+            className="w-28 rounded-md border border-line px-2 py-1 text-right focus:outline-none focus:ring-2 focus:ring-accent"
+            value={value}
+            inputMode="decimal"
+            placeholder="не задана"
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={save}
+            onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+          />
+          <span className="text-muted">₽</span>
+          {saved && <Check className="h-4 w-4 text-accent" aria-label="Сохранено" />}
+        </>
+      ) : (
+        <span className="font-medium text-graphite">{rate ? rub(rate) : "не задана"}</span>
+      )}
+      <span className="text-xs text-muted">— подставляется в цену новых работ</span>
     </div>
   );
 }

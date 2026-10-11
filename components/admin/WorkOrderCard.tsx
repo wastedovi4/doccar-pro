@@ -2,18 +2,34 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Save, User, Car, Wrench, CalendarDays } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Save,
+  User,
+  Car,
+  Wrench,
+  CalendarDays,
+  Printer,
+  Link2,
+  Lock,
+  Package,
+  FileText,
+  Lightbulb,
+} from "lucide-react";
 import {
   WO_MECHANIC_STATUSES,
   WO_STATUSES,
   WO_STATUS_LABEL,
   type Role,
   type Vehicle,
+  type WorkOrderDetail,
   type WorkOrderStatus,
-  type WorkOrderView,
 } from "@/lib/crm-types";
-import { formatMileage, plateDisplay, vehicleLabel, woNumber } from "@/lib/format";
+import { formatMileage, parseRub, plateDisplay, rub, rubInput, vehicleLabel, woNumber } from "@/lib/format";
 import { WoStatusChip, fmtDate, Label, crmInput } from "@/components/admin/ui";
+import { OrderLines } from "@/components/admin/OrderLines";
+import { OrderRecommendations } from "@/components/admin/OrderRecommendations";
 import type { StaffLite } from "@/components/admin/AppointmentModal";
 
 /** Следующий шаг по статусу — главная кнопка карточки. */
@@ -23,18 +39,34 @@ const NEXT: Partial<Record<WorkOrderStatus, { to: WorkOrderStatus; label: string
   ready: { to: "closed", label: "Выдать клиенту" },
 };
 
-/** Карточка заказ-наряда. Механик — свой наряд, без телефона, только статусы «в работе/готов». */
+function Section({ icon: Icon, title, children, aside }: { icon: typeof User; title: string; children: React.ReactNode; aside?: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-line bg-white p-4 sm:p-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-muted">
+          <Icon className="h-4 w-4" aria-hidden /> {title}
+        </h2>
+        {aside}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Карточка заказ-наряда. Механик — свой наряд, без телефона и цен, статусы «в работе/готов». */
 export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
   const manager = role === "admin" || role === "receiver";
-  const [order, setOrder] = useState<WorkOrderView | null>(null);
+  const [order, setOrder] = useState<WorkOrderDetail | null>(null);
   const [missing, setMissing] = useState(false);
   const [staff, setStaff] = useState<StaffLite[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [draft, setDraft] = useState({ complaint: "", mileage: "", note: "", mechanicId: "", vehicleId: "" });
+  const [report, setReport] = useState("");
+  const [discount, setDiscount] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  function adopt(o: WorkOrderView) {
+  function adopt(o: WorkOrderDetail) {
     setOrder(o);
     setDraft({
       complaint: o.complaint,
@@ -43,6 +75,14 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
       mechanicId: o.mechanicId ?? "",
       vehicleId: o.vehicleId ?? "",
     });
+    setReport(o.report);
+    setDiscount(rubInput(o.discount ?? 0) === "0" ? "" : rubInput(o.discount ?? 0));
+  }
+
+  async function reload() {
+    const d = await (await fetch(`/api/admin/orders/${id}`)).json();
+    if (d.ok) setOrder(d.order);
+    else setMissing(true);
   }
 
   useEffect(() => {
@@ -57,6 +97,8 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
     fetch(`/api/admin/clients/${order.clientId}`).then((r) => r.json()).then((d) => d.ok && setVehicles(d.vehicles));
   }, [manager, order?.clientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const flash = (ok: boolean, text: string) => setMsg({ ok, text });
+
   async function patch(body: Record<string, unknown>, okText: string) {
     setSaving(true);
     setMsg(null);
@@ -69,11 +111,23 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
       const d = await res.json();
       if (!res.ok) throw new Error(d?.error || "Не удалось сохранить");
       adopt(d.order);
-      setMsg({ ok: true, text: okText });
+      flash(true, okText);
     } catch (e) {
-      setMsg({ ok: false, text: e instanceof Error ? e.message : "Ошибка" });
+      flash(false, e instanceof Error ? e.message : "Ошибка");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function share() {
+    const res = await fetch(`/api/admin/orders/${id}/share`, { method: "POST" });
+    const d = await res.json();
+    if (!res.ok) return flash(false, d?.error || "Не удалось получить ссылку");
+    try {
+      await navigator.clipboard.writeText(d.url);
+      flash(true, `Ссылка для клиента скопирована: ${d.url}`);
+    } catch {
+      flash(true, `Ссылка для клиента: ${d.url}`);
     }
   }
 
@@ -101,6 +155,8 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
     draft.mechanicId !== (order.mechanicId ?? "") ||
     draft.vehicleId !== (order.vehicleId ?? "");
   const mechanics = staff.filter((s) => s.role === "mechanic");
+  const locked = order.locked;
+  const t = order.totals;
 
   return (
     <div className="space-y-5">
@@ -117,8 +173,18 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {manager && (
+            <a href={`/admin/print/orders/${id}`} target="_blank" rel="noopener noreferrer" className="btn-outline-light min-h-[40px] py-2">
+              <Printer className="h-4 w-4" aria-hidden /> Печать
+            </a>
+          )}
+          {manager && (
+            <button onClick={share} className="btn-outline-light min-h-[40px] py-2">
+              <Link2 className="h-4 w-4" aria-hidden /> Ссылка клиенту
+            </button>
+          )}
           {canNext && (
-            <button onClick={() => patch({ status: next!.to }, `Статус: ${WO_STATUS_LABEL[next!.to]}`)} disabled={saving} className="btn-primary">
+            <button onClick={() => patch({ status: next!.to }, `Статус: ${WO_STATUS_LABEL[next!.to]}`)} disabled={saving} className="btn-primary min-h-[40px] py-2">
               {next!.label}
             </button>
           )}
@@ -139,8 +205,15 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
         </div>
       </div>
 
+      {locked && (
+        <p className="flex items-center gap-2 rounded-lg border border-line bg-mist px-3 py-2 text-sm text-muted">
+          <Lock className="h-4 w-4" aria-hidden />
+          Наряд {order.status === "closed" ? "выдан" : "отменён"} — это документ, правки закрыты.
+          {manager && " Чтобы исправить, верните статус."}
+        </p>
+      )}
       {msg && (
-        <p className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-lime-50 text-lime-800" : "bg-red-50 text-red-600"}`}>{msg.text}</p>
+        <p className={`break-all rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-lime-50 text-lime-800" : "bg-red-50 text-red-600"}`}>{msg.text}</p>
       )}
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -168,12 +241,8 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
             <Car className="h-4 w-4" aria-hidden /> Автомобиль
           </div>
-          {manager && vehicles.length > 0 ? (
-            <select
-              className={`${crmInput} mt-2`}
-              value={draft.vehicleId}
-              onChange={(e) => setDraft({ ...draft, vehicleId: e.target.value })}
-            >
+          {manager && !locked && vehicles.length > 0 ? (
+            <select className={`${crmInput} mt-2`} value={draft.vehicleId} onChange={(e) => setDraft({ ...draft, vehicleId: e.target.value })}>
               <option value="">— не указан —</option>
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -196,12 +265,8 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
             <Wrench className="h-4 w-4" aria-hidden /> Механик
           </div>
-          {manager ? (
-            <select
-              className={`${crmInput} mt-2`}
-              value={draft.mechanicId}
-              onChange={(e) => setDraft({ ...draft, mechanicId: e.target.value })}
-            >
+          {manager && !locked ? (
+            <select className={`${crmInput} mt-2`} value={draft.mechanicId} onChange={(e) => setDraft({ ...draft, mechanicId: e.target.value })}>
               <option value="">— не назначен —</option>
               {mechanics.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -224,26 +289,16 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
         <div className="grid gap-4 sm:grid-cols-[200px_1fr]">
           <label className="block">
             <Label>Пробег при приёмке, км</Label>
-            {manager ? (
-              <input
-                className={crmInput}
-                inputMode="numeric"
-                value={draft.mileage}
-                onChange={(e) => setDraft({ ...draft, mileage: e.target.value })}
-              />
+            {manager && !locked ? (
+              <input className={crmInput} inputMode="numeric" value={draft.mileage} onChange={(e) => setDraft({ ...draft, mileage: e.target.value })} />
             ) : (
               <div className="py-2 text-sm font-medium text-graphite">{formatMileage(order.mileage) || "—"}</div>
             )}
           </label>
           <label className="block">
             <Label>Жалоба / что нужно сделать</Label>
-            {manager ? (
-              <textarea
-                className={crmInput}
-                rows={3}
-                value={draft.complaint}
-                onChange={(e) => setDraft({ ...draft, complaint: e.target.value })}
-              />
+            {manager && !locked ? (
+              <textarea className={crmInput} rows={2} value={draft.complaint} onChange={(e) => setDraft({ ...draft, complaint: e.target.value })} />
             ) : (
               <div className="whitespace-pre-line py-2 text-sm text-graphite">{order.complaint || "—"}</div>
             )}
@@ -251,11 +306,17 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
         </div>
         {manager && (
           <label className="mt-4 block">
-            <Label>Заметка (внутренняя)</Label>
-            <textarea className={crmInput} rows={2} value={draft.note} onChange={(e) => setDraft({ ...draft, note: e.target.value })} />
+            <Label>Заметка (внутренняя, клиенту не видна)</Label>
+            <textarea
+              className={crmInput}
+              rows={2}
+              value={draft.note}
+              disabled={locked}
+              onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+            />
           </label>
         )}
-        {manager && (
+        {manager && !locked && (
           <div className="mt-4 flex justify-end">
             <button
               onClick={() =>
@@ -280,9 +341,82 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
         )}
       </div>
 
-      <div className="rounded-xl border border-dashed border-line bg-white px-5 py-4 text-sm text-muted">
-        Работы, запчасти, отчёт механика и рекомендации клиенту — следующий этап.
-      </div>
+      <Section icon={Wrench} title="Работы">
+        <OrderLines orderId={id} kind="work" lines={order.lines} manager={manager} locked={locked} onChange={reload} onError={(m) => flash(false, m)} />
+      </Section>
+
+      <Section icon={Package} title="Запчасти и материалы">
+        <OrderLines orderId={id} kind="part" lines={order.lines} manager={manager} locked={locked} onChange={reload} onError={(m) => flash(false, m)} />
+      </Section>
+
+      {manager && t && (
+        <div className="rounded-xl border border-line bg-white p-4 sm:p-5">
+          <dl className="ml-auto grid max-w-sm grid-cols-[1fr_auto] gap-x-6 gap-y-1.5 text-sm">
+            <dt className="text-muted">Работы</dt>
+            <dd className="text-right text-graphite">{rub(t.works)}</dd>
+            <dt className="text-muted">Запчасти и материалы</dt>
+            <dd className="text-right text-graphite">{rub(t.parts)}</dd>
+            <dt className="self-center text-muted">Скидка, ₽</dt>
+            <dd className="text-right">
+              {locked ? (
+                <span className="text-graphite">{t.discount ? `− ${rub(t.discount)}` : "—"}</span>
+              ) : (
+                <input
+                  className="w-28 rounded-md border border-line px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  value={discount}
+                  inputMode="decimal"
+                  placeholder="0"
+                  onChange={(e) => setDiscount(e.target.value)}
+                  onBlur={() => (parseRub(discount) ?? 0) !== (order.discount ?? 0) && patch({ discount: discount || "0" }, "Скидка сохранена")}
+                />
+              )}
+            </dd>
+            <dt className="border-t border-line pt-2 font-bold text-graphite">Итого к оплате</dt>
+            <dd className="border-t border-line pt-2 text-right text-lg font-extrabold text-graphite">{rub(t.total)}</dd>
+          </dl>
+          {t.unpriced > 0 && (
+            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Позиций без цены: {t.unpriced}. Наряд нельзя выдать, пока у всех позиций сервиса нет цены.
+            </p>
+          )}
+        </div>
+      )}
+
+      <Section
+        icon={FileText}
+        title="Отчёт механика"
+        aside={
+          !locked && report !== order.report ? (
+            <button onClick={() => patch({ report }, "Отчёт сохранён")} disabled={saving} className="btn-primary min-h-[34px] px-3 py-1.5">
+              <Save className="h-4 w-4" aria-hidden /> Сохранить
+            </button>
+          ) : null
+        }
+      >
+        {locked ? (
+          <div className="whitespace-pre-line text-sm text-graphite">{order.report || "—"}</div>
+        ) : (
+          <textarea
+            className={crmInput}
+            rows={4}
+            value={report}
+            placeholder="Что сделано, что выявлено при осмотре, на что обратить внимание"
+            onChange={(e) => setReport(e.target.value)}
+          />
+        )}
+      </Section>
+
+      <Section icon={Lightbulb} title="Рекомендации клиенту">
+        <OrderRecommendations
+          orderId={id}
+          carried={order.carried}
+          own={order.recommendations}
+          manager={manager}
+          locked={locked}
+          onChange={reload}
+          onError={(m) => flash(false, m)}
+        />
+      </Section>
     </div>
   );
 }

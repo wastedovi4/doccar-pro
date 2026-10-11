@@ -9,7 +9,7 @@ import {
   mileageOf,
   touchVehicleMileage,
 } from "@/lib/clients";
-import { normalizePhone, plateKey } from "@/lib/format";
+import { normalizePhone, parseRub, plateKey } from "@/lib/format";
 import {
   WO_MECHANIC_STATUSES,
   WO_STATUSES,
@@ -74,8 +74,12 @@ function toView(r: Row, viewer?: Viewer): WorkOrderView {
         }
       : undefined,
     mechanicName: opt(r.m_name),
+    report: String(r.report ?? ""),
+    ...(showPhone ? { discount: Number(r.discount ?? 0), publicToken: opt(r.public_token) } : {}),
   };
 }
+
+export const LOCKED_STATUSES: WorkOrderStatus[] = ["closed", "cancelled"];
 
 export type OrderScope = "active" | "closed" | "all";
 
@@ -214,6 +218,8 @@ export type OrderPatch = {
   complaint?: string;
   mileage?: unknown;
   note?: string;
+  report?: string;
+  discount?: unknown; // рубли (строка/число) — в копейки
 };
 
 /**
@@ -238,11 +244,27 @@ export function updateWorkOrder(
       vals.push(v);
     };
 
+    // Выданный/отменённый наряд — документ: правки только после возврата статуса.
+    const wasLocked = LOCKED_STATUSES.includes(r.status as WorkOrderStatus);
+    const reopening = patch.status !== undefined && !LOCKED_STATUSES.includes(patch.status as WorkOrderStatus);
+    const editsContent = (["mechanicId", "vehicleId", "complaint", "mileage", "note", "report", "discount"] as const).some(
+      (k) => patch[k] !== undefined
+    );
+    if (wasLocked && !reopening && editsContent) {
+      throw new Rejection("Наряд выдан или отменён — сначала верните статус", 409);
+    }
+
     if (patch.status !== undefined) {
       const st = patch.status as WorkOrderStatus;
       if (!WO_STATUSES.includes(st)) throw new Rejection("Неизвестный статус", 400);
       if (!manager && !WO_MECHANIC_STATUSES.includes(st)) throw new Rejection("Механик не может ставить этот статус", 403);
       if (st !== r.status) {
+        if (st === "closed") {
+          const unpriced = Number(
+            (d.prepare("SELECT COUNT(*) AS n FROM work_order_lines WHERE order_id = ? AND source = 'service' AND price IS NULL").get(id) as Row).n
+          );
+          if (unpriced) throw new Rejection(`Не у всех позиций есть цена (${unpriced}) — выдать нельзя`, 409);
+        }
         set("status", st);
         set("closed_at", st === "closed" ? now() : null);
         if (st === "closed" && r.appointment_id) {
@@ -251,7 +273,10 @@ export function updateWorkOrder(
       }
     }
 
+    if (patch.report !== undefined) set("report", clip(patch.report, 8000));
+
     if (manager) {
+      if (patch.discount !== undefined) set("discount", parseRub(patch.discount) ?? 0);
       if (patch.mechanicId !== undefined) {
         const m = patch.mechanicId && findUserById(patch.mechanicId) ? patch.mechanicId : null;
         set("mechanic_id", m);

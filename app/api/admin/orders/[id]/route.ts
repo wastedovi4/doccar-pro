@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getWorkOrder, updateWorkOrder } from "@/lib/orders";
+import { updateWorkOrder } from "@/lib/orders";
+import { getWorkOrderDetail } from "@/lib/order-items";
 
 export const dynamic = "force-dynamic";
 
 type Ctx = { params: { id: string } };
 
+/** Полная карточка наряда: состав, итоги (менеджеру), рекомендации. */
 export async function GET(_req: Request, { params }: Ctx) {
   const s = await getSession();
   if (!s) return NextResponse.json({ ok: false }, { status: 401 });
-  const order = getWorkOrder(params.id, s);
+  const order = getWorkOrderDetail(params.id, s);
   if (!order) return NextResponse.json({ ok: false, error: "Заказ-наряд не найден" }, { status: 404 });
   return NextResponse.json({ ok: true, order });
 }
@@ -32,9 +34,11 @@ export async function PATCH(request: Request, { params }: Ctx) {
       complaint: typeof b?.complaint === "string" ? b.complaint : undefined,
       mileage: b?.mileage,
       note: typeof b?.note === "string" ? b.note : undefined,
+      report: typeof b?.report === "string" ? b.report : undefined,
+      discount: b?.discount,
     },
     s
   );
   if ("err" in res) return NextResponse.json({ ok: false, error: res.err }, { status: res.code });
-  return NextResponse.json({ ok: true, order: res.order });
+  return NextResponse.json({ ok: true, order: getWorkOrderDetail(params.id, s) });
 }
