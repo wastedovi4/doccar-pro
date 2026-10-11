@@ -65,9 +65,14 @@ export function Footer({
       </div>
 
       <div className="border-t border-white/[0.06]">
-        <p className="container-x py-6 text-xs text-frost/35">
-          © {business.name}, {new Date().getFullYear()}
-        </p>
+        <div className="container-x flex flex-wrap items-center justify-between gap-3 py-6 text-xs text-frost/35">
+          <span>
+            © {business.name}, {new Date().getFullYear()}
+          </span>
+          <a href="/lk" className="hover:text-accent">
+            Личный кабинет
+          </a>
+        </div>
       </div>
     </footer>
   );

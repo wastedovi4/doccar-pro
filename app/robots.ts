@@ -5,7 +5,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const { seo } = await getContent();
   return {
     rules: [
-      { userAgent: "*", allow: "/", disallow: ["/admin", "/r/"] },
+      { userAgent: "*", allow: "/", disallow: ["/admin", "/r/", "/lk"] },
     ],
     sitemap: `${seo.url}/sitemap.xml`,
   };

@@ -32,6 +32,7 @@ export type Lead = {
   processedBy?: string; // userId
   note?: string;
   appointmentId?: string;
+  clientId?: string; // клиент (заявка из личного кабинета или после приёмки)
 };
 
 export type ApptStatus = "scheduled" | "in_progress" | "done" | "cancelled";

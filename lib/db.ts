@@ -178,6 +178,15 @@ const MIGRATIONS: string[] = [
   CREATE INDEX rec_client ON recommendations (client_id, status);
   CREATE INDEX rec_order ON recommendations (order_id);
   `,
+
+  // v4: личный кабинет клиента — вход по персональной ссылке
+  `
+  ALTER TABLE clients ADD COLUMN access_hash TEXT;                        -- sha256 секрета ссылки (сам секрет не хранится)
+  ALTER TABLE clients ADD COLUMN access_version INTEGER NOT NULL DEFAULT 0; -- растёт при выдаче/отзыве: старые сессии гаснут
+  ALTER TABLE clients ADD COLUMN access_issued_at TEXT;
+  ALTER TABLE clients ADD COLUMN last_seen_at TEXT;                       -- последний визит в кабинет
+  CREATE UNIQUE INDEX clients_access ON clients (access_hash) WHERE access_hash IS NOT NULL;
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

@@ -9,6 +9,7 @@ import { PriorityChip } from "@/components/admin/OrderRecommendations";
 import { formatMileage, isValidVin, plateDisplay, rub, vehicleLabel, woNumber } from "@/lib/format";
 import { Modal, WoStatusChip, fmtDate, Label, crmInput } from "@/components/admin/ui";
 import { IntakeDialog } from "@/components/admin/IntakeDialog";
+import { ClientAccess } from "@/components/admin/ClientAccess";
 import type { StaffLite } from "@/components/admin/AppointmentModal";
 
 type Card = {
@@ -203,6 +204,8 @@ export function ClientCard({ id }: { id: string }) {
           <p className="mt-3 text-xs text-muted">Отметить выполненной можно в заказ-наряде при следующем визите.</p>
         </div>
       )}
+
+      <ClientAccess clientId={id} />
 
       {/* История */}
       <div className="rounded-xl border border-line bg-white p-4 sm:p-5">

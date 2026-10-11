@@ -130,6 +130,16 @@ export function RequestsBoard() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="truncate font-semibold text-graphite">{lead.name}</span>
+                      {lead.clientId && (
+                        <a
+                          href={`/admin/clients/${lead.clientId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="rounded-full bg-lime-100 px-2 py-0.5 text-xs font-medium text-lime-800 hover:underline"
+                          title="Заявка из личного кабинета — открыть карточку клиента"
+                        >
+                          из ЛК
+                        </a>
+                      )}
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${st.cls}`}>
                         {st.label}
                       </span>

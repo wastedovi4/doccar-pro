@@ -81,6 +81,7 @@ function toLead(r: Row): Lead {
     processedBy: opt(r.processed_by),
     note: opt(r.note),
     appointmentId: opt(r.appointment_id),
+    clientId: opt(r.client_id),
   };
 }
 
@@ -219,13 +220,21 @@ export function deleteUser(id: string, actorId: string): { ok: true } | { err: s
 
 /* ---------- заявки с сайта ---------- */
 
-export function createLead(input: { name: string; phone: string; car: string; service: string; message: string }): Lead {
-  const lead: Lead = { id: uid(), ...input, service: input.service || undefined, status: "new", createdAt: now() };
+export function createLead(input: {
+  name: string;
+  phone: string;
+  car: string;
+  service: string;
+  message: string;
+  clientId?: string; // заявка из личного кабинета
+}): Lead {
+  const { clientId, ...fields } = input;
+  const lead: Lead = { id: uid(), ...fields, service: input.service || undefined, status: "new", createdAt: now(), clientId };
   db()
     .prepare(
-      "INSERT INTO leads (id, name, phone, car, service, message, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'new', ?)"
+      "INSERT INTO leads (id, name, phone, car, service, message, status, created_at, client_id) VALUES (?, ?, ?, ?, ?, ?, 'new', ?, ?)"
     )
-    .run(lead.id, lead.name, lead.phone, lead.car, input.service, lead.message, lead.createdAt);
+    .run(lead.id, lead.name, lead.phone, lead.car, input.service, lead.message, lead.createdAt, clientId ?? null);
   return lead;
 }
 
@@ -356,8 +365,8 @@ export function createAppointment(
     };
     d.prepare(
       `INSERT INTO appointments (id, lead_id, client_name, phone, car, service, mechanic_id, start, start_ms,
-         duration_min, status, note, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         duration_min, status, note, created_by, created_at, client_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       appt.id,
       appt.leadId ?? null,
@@ -372,7 +381,9 @@ export function createAppointment(
       appt.status,
       appt.note ?? null,
       actorId,
-      appt.createdAt
+      appt.createdAt,
+      // Заявка из личного кабинета уже знает клиента — запись наследует его.
+      lead?.client_id ? String(lead.client_id) : null
     );
     // Запись из заявки — связать и пометить заявку обработанной.
     if (lead) {
