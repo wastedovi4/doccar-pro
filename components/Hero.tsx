@@ -1,13 +1,57 @@
 /* eslint-disable @next/next/no-img-element */
 import { ArrowRight, MapPin } from "lucide-react";
 import { BOOKING_HREF } from "@/config/site";
+import { LogoMark } from "@/components/Logo";
 import type { Content } from "@/lib/content-model";
+
+/** Фон главного экрана без фото: мотив логотипа — линия пульса, сетка, свечение. */
+function BrandBackdrop() {
+  return (
+    <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
+      <div
+        className="absolute inset-0 opacity-60"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(232,236,239,0.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(232,236,239,0.045) 1px, transparent 1px)",
+          backgroundSize: "64px 64px",
+          maskImage: "radial-gradient(ellipse 80% 70% at 70% 45%, #000 30%, transparent 100%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 70% 45%, #000 30%, transparent 100%)",
+        }}
+      />
+      <div className="absolute -right-32 top-1/3 h-[560px] w-[760px] rounded-full bg-lime/[0.09] blur-[140px]" />
+      <LogoMark className="absolute right-[-4%] top-1/2 hidden h-[86%] w-auto -translate-y-1/2 opacity-[0.07] lg:block" />
+      {/* Линия пульса: на десктопе — правее текста, на узких экранах — под кнопками */}
+      <svg
+        viewBox="0 0 1200 240"
+        preserveAspectRatio="none"
+        className="absolute inset-x-0 top-[90%] h-24 w-full -translate-y-1/2 lg:top-[66%] lg:h-56"
+      >
+        <defs>
+          <linearGradient id="pulse-fade" x1="0" x2="1">
+            <stop offset="0" stopColor="#C6F34A" stopOpacity="0" />
+            <stop offset="0.6" stopColor="#C6F34A" stopOpacity="0" />
+            <stop offset="0.75" stopColor="#C6F34A" stopOpacity="0.55" />
+            <stop offset="1" stopColor="#C6F34A" stopOpacity="0.2" />
+          </linearGradient>
+        </defs>
+        <polyline
+          points="0,140 860,140 900,138 940,40 985,205 1025,110 1055,140 1200,140"
+          fill="none"
+          stroke="url(#pulse-fade)"
+          strokeWidth="3"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    </div>
+  );
+}
 
 export function Hero({ hero }: { hero: Content["hero"] }) {
   return (
     <section className="relative isolate overflow-hidden bg-night pt-16 lg:pt-[72px]">
-      {/* Фото ремзоны: справа на десктопе, фоном на мобильном. Слева уходит в фон. */}
-      {hero.image && (
+      {hero.image ? (
+        // Фото ремзоны: справа на десктопе, фоном на мобильном. Слева уходит в фон.
         <div aria-hidden className="absolute inset-0 -z-10 lg:left-[22%]">
           <img
             src={hero.image}
@@ -19,6 +63,8 @@ export function Hero({ hero }: { hero: Content["hero"] }) {
           <div className="absolute inset-0 bg-gradient-to-r from-night via-night/75 to-night/5 lg:via-night/55" />
           <div className="absolute inset-0 bg-gradient-to-t from-night via-night/20 to-night/50" />
         </div>
+      ) : (
+        <BrandBackdrop />
       )}
 
       <div className="container-x flex min-h-[540px] items-center py-20 sm:min-h-[600px] lg:min-h-[640px] lg:py-28">

@@ -1,12 +1,21 @@
-import type { Content } from "@/lib/content-model";
+import type { Content, FaqBlock, ServicesBlock } from "@/lib/content-model";
 
 /**
- * JSON-LD schema.org (AutoRepair).
+ * JSON-LD schema.org: AutoRepair (+ FAQPage, если есть видимые разделы FAQ).
  * Незаполненные данные (телефон, график, улица) не выдумываются — попадают
  * в разметку только если заданы в контенте (админка).
  */
 export function JsonLd({ content }: { content: Content }) {
-  const { business, seo, services } = content;
+  const { business, seo } = content;
+  const visible = content.blocks.filter((b) => b.visible);
+  const services = visible
+    .filter((b): b is ServicesBlock => b.type === "services")
+    .flatMap((b) => b.items)
+    .filter((s) => s.title.trim());
+  const faq = visible
+    .filter((b): b is FaqBlock => b.type === "faq")
+    .flatMap((b) => b.items)
+    .filter((x) => x.q.trim() && x.a.trim());
 
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -43,11 +52,29 @@ export function JsonLd({ content }: { content: Content }) {
   if (business.email) data.email = business.email;
   if (business.openingHoursSpec) data.openingHours = business.openingHoursSpec;
 
+  const graphs: Record<string, unknown>[] = [data];
+  if (faq.length) {
+    graphs.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faq.map((x) => ({
+        "@type": "Question",
+        name: x.q,
+        acceptedAnswer: { "@type": "Answer", text: x.a },
+      })),
+    });
+  }
+
   return (
-    <script
-      type="application/ld+json"
-      // `<` экранируется, чтобы текст из админки не мог закрыть <script>.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
-    />
+    <>
+      {graphs.map((g, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          // `<` экранируется, чтобы текст из админки не мог закрыть <script>.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(g).replace(/</g, "\\u003c") }}
+        />
+      ))}
+    </>
   );
 }

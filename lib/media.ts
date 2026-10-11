@@ -1,13 +1,13 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { MEDIA_PREFIX, isSafeId } from "@/lib/media-url";
+
+export { MEDIA_PREFIX, isSafeId, safeImageUrl } from "@/lib/media-url";
 
 /** Загруженные фото хранятся в data/uploads (том Docker → переживают деплой). */
 export const UPLOADS_DIR = path.join(process.cwd(), "data", "uploads");
 
 export const MAX_UPLOAD_BYTES = 6 * 1024 * 1024; // 6 МБ
-
-/** Префикс публичного URL загруженного файла. */
-export const MEDIA_PREFIX = "/api/media/";
 
 const EXT_TYPE: Record<string, string> = {
   jpg: "image/jpeg",
@@ -35,27 +35,6 @@ export function sniffImage(buf: Buffer): string | null {
 export function contentTypeForId(id: string): string {
   const ext = id.split(".").pop()?.toLowerCase() ?? "";
   return EXT_TYPE[ext] ?? "application/octet-stream";
-}
-
-/** Безопасный id: только буквы/цифры/дефис + одно расширение. Защита от path traversal. */
-export function isSafeId(id: string): boolean {
-  return /^[a-zA-Z0-9-]+\.(jpg|jpeg|png|webp|gif)$/.test(id);
-}
-
-/** Встроенные картинки из public/images (стартовые заглушки). */
-const BUILTIN_RE = /^\/images\/[a-z0-9-]+\.(jpg|jpeg|png|webp|gif|svg)$/;
-
-/**
- * Нормализует URL картинки из контента: допускаются только встроенные
- * `/images/*` и загруженные `/api/media/<id>`. Всё прочее (внешние ссылки,
- * javascript:, обход путей) превращается в "" — «без фото».
- */
-export function safeImageUrl(v: unknown): string {
-  if (typeof v !== "string") return "";
-  const s = v.trim();
-  if (BUILTIN_RE.test(s)) return s;
-  if (s.startsWith(MEDIA_PREFIX) && isSafeId(s.slice(MEDIA_PREFIX.length))) return s;
-  return "";
 }
 
 /** Файлы загрузок, которые не старше grace-периода, не трогаем (загрузили, но ещё не сохранили). */

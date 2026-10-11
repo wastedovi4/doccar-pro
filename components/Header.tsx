@@ -3,21 +3,21 @@
 import { useEffect, useState } from "react";
 import { Menu, X, Phone } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { nav, BOOKING_HREF } from "@/config/site";
+import { BOOKING_HREF } from "@/config/site";
 import type { Content } from "@/lib/content-model";
 
 export function Header({
-  sections,
+  nav,
   business,
 }: {
-  sections: Content["sections"];
+  nav: { href: string; label: string }[];
   business: Content["business"];
 }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Пункт меню прячется вместе со скрытым в админке блоком.
-  const items = nav.filter((item) => !("section" in item) || sections[item.section]);
+  // Пункты меню — из разделов (подпись задаётся в админке) + «Контакты».
+  const items = nav;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);

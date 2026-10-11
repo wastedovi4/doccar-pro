@@ -1,16 +1,16 @@
 import { MapPin, Phone, Clock } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { mapLinks, nav } from "@/config/site";
+import { mapLinks } from "@/config/site";
 import { fullAddress, type Content } from "@/lib/content-model";
 
 export function Footer({
   business,
-  sections,
+  nav,
 }: {
   business: Content["business"];
-  sections: Content["sections"];
+  nav: { href: string; label: string }[];
 }) {
-  const items = nav.filter((item) => !("section" in item) || sections[item.section]);
+  const items = nav;
   const maps = mapLinks(business.geo);
 
   return (

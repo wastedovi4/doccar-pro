@@ -1,5 +1,6 @@
 /**
- * Статика сайта (не редактируется из админки): навигация и построение ссылок на карты.
+ * Статика сайта (не редактируется из админки): построение ссылок на карты, якорь записи.
+ * Меню строится из разделов контента (navItems в lib/content-model.ts).
  * Координаты сервиса — в контенте (админка → «Контакты»), сюда приходят аргументом.
  *
  * Редактируемый контент (контакты, услуги, тексты, SEO) — в lib/content-model.ts.
@@ -19,12 +20,6 @@ export function mapLinks({ lat, lng }: Geo) {
     route: `https://yandex.ru/maps/?rtext=~${lat}%2C${lng}&rtt=auto`,
   };
 }
-
-export const nav = [
-  { href: "#services", label: "Услуги", section: "services" },
-  { href: "#about", label: "О сервисе", section: "about" },
-  { href: "#contacts", label: "Контакты" },
-] as const;
 
 /** Якорь, который открывает окно записи (см. components/BookingDialog.tsx). */
 export const BOOKING_HREF = "#booking";
