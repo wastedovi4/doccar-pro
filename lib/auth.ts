@@ -53,7 +53,7 @@ export async function getSession(): Promise<PublicUser | null> {
   const token = cookies().get(COOKIE_NAME)?.value;
   const payload = verifyToken(token);
   if (!payload) return null;
-  const user = await findUserById(payload.uid);
+  const user = findUserById(payload.uid);
   if (!user || !user.active) return null;
   return toPublic(user);
 }

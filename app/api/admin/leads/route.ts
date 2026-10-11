@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
 import { getSession, can } from "@/lib/auth";
-import { tx, read, type LeadStatus } from "@/lib/crm";
+import { listLeads, updateLead } from "@/lib/crm";
 
 export const dynamic = "force-dynamic";
-
-const VALID: LeadStatus[] = ["new", "seen", "processed", "archived"];
 
 export async function GET() {
   const s = await getSession();
   if (!can(s?.role, "admin", "receiver")) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
-  const db = await read();
-  return NextResponse.json({ ok: true, leads: db.leads });
+  return NextResponse.json({ ok: true, leads: listLeads() });
 }
 
 export async function PATCH(request: Request) {
@@ -26,29 +23,18 @@ export async function PATCH(request: Request) {
   } catch {
     return NextResponse.json({ ok: false, error: "Bad JSON" }, { status: 400 });
   }
-  const id = String(body?.id ?? "");
-  const now = new Date().toISOString();
 
-  const lead = await tx((db) => {
-    const l = db.leads.find((x) => x.id === id);
-    if (!l) return null;
-    if (body.seen && !l.seenAt) {
-      l.seenAt = now;
-      l.seenBy = s.id;
-      if (l.status === "new") l.status = "seen";
-    }
-    if (body.processed) {
-      l.processedAt = now;
-      l.processedBy = s.id;
-      l.status = "processed";
-    }
-    if (typeof body.note === "string") l.note = body.note;
-    if (typeof body.status === "string" && VALID.includes(body.status)) {
-      l.status = body.status;
-    }
-    if (typeof body.appointmentId === "string") l.appointmentId = body.appointmentId;
-    return l;
-  });
+  const lead = updateLead(
+    String(body?.id ?? ""),
+    {
+      seen: body?.seen === true,
+      processed: body?.processed === true,
+      note: typeof body?.note === "string" ? body.note.slice(0, 2000) : undefined,
+      status: typeof body?.status === "string" ? body.status : undefined,
+      appointmentId: typeof body?.appointmentId === "string" ? body.appointmentId : undefined,
+    },
+    s.id
+  );
 
   if (!lead) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   return NextResponse.json({ ok: true, lead });

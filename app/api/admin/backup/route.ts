@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { getSession, can } from "@/lib/auth";
 import { zipStore } from "@/lib/zip";
+import { snapshot, SCHEMA_VERSION } from "@/lib/crm";
 import { UPLOADS_DIR, isSafeId } from "@/lib/media";
 
 export const dynamic = "force-dynamic";
@@ -32,23 +33,26 @@ async function uploads(): Promise<{ name: string; data: Buffer }[]> {
   return out;
 }
 
-/** Скачать ZIP-бэкап всех данных (контент сайта + CRM + фото). Только владелец. */
+/** Скачать ZIP-бэкап всех данных (контент сайта + база CRM + фото). Только владелец. */
 export async function GET() {
   const s = await getSession();
   if (!can(s?.role, "admin")) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 
-  const content = await fileOr("content.json", "{}");
-  const crm = await fileOr("crm.json", '{"users":[],"leads":[],"appointments":[]}');
   const meta = Buffer.from(
-    JSON.stringify({ app: "doccar", kind: "backup", version: 2, exportedAt: new Date().toISOString() }, null, 2),
+    JSON.stringify(
+      { app: "doccar", kind: "backup", version: 3, crm: "sqlite", schema: SCHEMA_VERSION, exportedAt: new Date().toISOString() },
+      null,
+      2
+    ),
     "utf8"
   );
 
   const zip = zipStore([
-    { name: "content.json", data: content },
-    { name: "crm.json", data: crm },
+    { name: "content.json", data: await fileOr("content.json", "{}") },
+    // Консистентный снимок базы (VACUUM INTO), а не копия «живого» файла с WAL.
+    { name: "crm.db", data: snapshot() },
     { name: "meta.json", data: meta },
     ...(await uploads()),
   ]);

@@ -1,5 +1,6 @@
 # DOCCAR.PRO — Next.js 14 (серверный рантайм: админка + API).
-FROM node:20-alpine
+# Node 24: встроенный node:sqlite (CRM-база data/crm.db) — без нативных модулей.
+FROM node:24-alpine
 WORKDIR /app
 
 # Зависимости отдельным слоем для кеша.

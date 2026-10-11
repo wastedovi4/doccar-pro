@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { tx, uid, type Lead } from "@/lib/crm";
+import { createLead } from "@/lib/crm";
 
 /**
- * Приём заявки с формы сайта. Заявка сохраняется в CRM (data/crm.json)
+ * Приём заявки с формы сайта. Заявка сохраняется в CRM (SQLite, data/crm.db)
  * со статусом "new" и появляется в админке → «Запросы» у приёмщика.
  *
  * Telegram/WhatsApp намеренно не используются (заблокированы в РФ).
@@ -28,19 +28,12 @@ export async function POST(request: Request) {
   // Поля формы — с ограничением длины (публичный эндпоинт).
   const field = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
 
-  const lead: Lead = {
-    id: uid(),
+  createLead({
     name: name.slice(0, 120),
     phone: phone.slice(0, 40),
     car: field(data?.car, 120),
     service: field(data?.service, 120),
     message: field(data?.message, 2000),
-    status: "new",
-    createdAt: new Date().toISOString(),
-  };
-
-  await tx((db) => {
-    db.leads.unshift(lead);
   });
 
   return NextResponse.json({ ok: true });

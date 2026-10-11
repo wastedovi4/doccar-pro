@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react";
-import type { Appointment, ApptStatus, Role } from "@/lib/crm";
+import type { Appointment, ApptStatus, Role } from "@/lib/crm-types";
 import type { Content } from "@/lib/content-model";
 import { AppointmentModal, type StaffLite } from "@/components/admin/AppointmentModal";
 

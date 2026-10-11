@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, UserPlus, Trash2, KeyRound, Check, X } from "lucide-react";
-import type { PublicUser, Role } from "@/lib/crm";
+import type { PublicUser, Role } from "@/lib/crm-types";
 
 const ROLES: { value: Role; label: string }[] = [
   { value: "admin", label: "Владелец (полный доступ)" },

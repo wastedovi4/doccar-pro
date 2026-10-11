@@ -16,7 +16,7 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
-import type { Role } from "@/lib/crm";
+import type { Role } from "@/lib/crm-types";
 import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { LogoMark } from "@/components/Logo";
 

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Bad request" }, { status: 400 });
   }
 
-  const user = await findUserByLogin(login);
+  const user = findUserByLogin(login);
   if (!user || !user.active || !verifyPassword(password, user.password)) {
     return NextResponse.json(
       { ok: false, error: "Неверный логин или пароль" },

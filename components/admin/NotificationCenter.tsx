@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, BellRing, Inbox, CalendarClock, Check } from "lucide-react";
-import type { Role } from "@/lib/crm";
+import type { Role } from "@/lib/crm-types";
 
 type FeedLead = { id: string; name: string; car: string; createdAt: string; status: string };
 type FeedAppt = { id: string; clientName: string; start: string; status: string; createdAt: string };

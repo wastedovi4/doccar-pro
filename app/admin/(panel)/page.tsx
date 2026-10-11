@@ -2,26 +2,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Inbox, CalendarDays, Wrench, ArrowRight } from "lucide-react";
 import { getSession, can } from "@/lib/auth";
-import { read } from "@/lib/crm";
+import { countNewLeads, countTodayAppointments } from "@/lib/crm";
 
 export const dynamic = "force-dynamic";
-
-function isToday(iso: string) {
-  return iso.slice(0, 10) === new Date().toISOString().slice(0, 10);
-}
 
 export default async function DashboardHome() {
   // Layout и page рендерятся параллельно — гард layout не защищает page.
   const user = await getSession();
   if (!user) redirect("/admin/login");
-  const db = await read();
-
-  const newLeads = db.leads.filter((l) => l.status === "new").length;
-  const myAppts =
-    user.role === "mechanic"
-      ? db.appointments.filter((a) => a.mechanicId === user.id)
-      : db.appointments;
-  const todayAppts = myAppts.filter((a) => isToday(a.start) && a.status !== "cancelled").length;
+  const newLeads = countNewLeads();
+  const todayAppts = countTodayAppointments(user.role === "mechanic" ? user.id : undefined);
 
   const cards: { href: string; icon: typeof Inbox; label: string; value: number | string; hint: string; show: boolean }[] = [
     {

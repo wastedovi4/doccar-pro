@@ -13,7 +13,7 @@ Next.js + встроенная админка + лёгкая CRM на файло
 
 ## Запуск
 
-Нужен **Node.js 18.17+** (рекомендуется 20 LTS).
+Нужен **Node.js 24+** — CRM хранится в SQLite через встроенный `node:sqlite`.
 
 ```bash
 npm install
@@ -76,14 +76,25 @@ npm run build && npm run start
 | Что | Где |
 | --- | --- |
 | Контент сайта | `data/content.json` → `normalizeContent` (проверка, дефолты, миграция старого формата), запись атомарная |
-| CRM (пользователи, заявки, записи) | `data/crm.json` |
+| CRM (сотрудники, заявки, записи) | `data/crm.db` — SQLite (WAL, внешние ключи), схема версионируется `PRAGMA user_version` |
 | Загруженные фото | `data/uploads/` — отдаются через `/api/media/<id>` |
 
 Каталог `data/` в `.gitignore` и монтируется томом в Docker — переживает деплой.
+
+**CRM на SQLite.** Слой данных — `lib/db.ts` (подключение, миграции, транзакции,
+снимок) и репозитории `lib/crm.ts` (бизнес-правила: последний админ, пересечения
+записей у механика, связь запись ↔ заявка). Роуты — тонкая HTTP-обвязка.
+Новая версия схемы = новый SQL в `MIGRATIONS` (`lib/db.ts`), применяется сама при
+старте. Старый `data/crm.json` при первом запуске импортируется один раз
+(висячие ссылки обнуляются) и переименовывается в `crm.json.imported`.
+Откат на версию без SQLite: вернуть `crm.json.imported` → `crm.json`.
 Фото, которые больше не используются в контенте (обход всего дерева контента, а
 не списка полей), удаляются при сохранении; свежие загрузки младше часа не трогаются. **Бэкап** (админка → «Бэкап») —
-ZIP с `content.json`, `crm.json` и всеми загруженными фото; восстановление
-возвращает и фото.
+ZIP с `content.json`, снимком базы `crm.db` (`VACUUM INTO` — консистентный, без
+WAL) и всеми загруженными фото. Восстановление проверяет базу из архива
+(целостность, таблицы, версия схемы), сохраняет текущую как
+`crm.db.before-restore-*` и заменяет её; старые архивы с `crm.json` тоже
+принимаются (импорт).
 
 Загрузка принимает JPG/PNG/WEBP/GIF до 6 МБ; тип определяется по содержимому
 файла. URL картинок в контенте — только встроенные `/images/*` или `/api/media/*`.
@@ -108,7 +119,9 @@ lib/
   content.ts                # чтение/запись data/content.json (сервер)
   media-url.ts, media.ts    # URL загрузок (чистое) / сигнатуры, уборка (сервер)
   icons.tsx                 # реестр иконок (lucide + свои: монитор-пульс, ключ+отвёртка)
-  crm.ts, auth.ts, zip.ts   # CRM-стор, сессии, ZIP для бэкапа
+  db.ts                     # SQLite: подключение, миграции, транзакции, снимок/восстановление
+  crm.ts, crm-types.ts      # репозитории CRM + типы (типы — можно в клиенте)
+  auth.ts, zip.ts           # сессии, ZIP для бэкапа
 config/site.ts              # ссылки на карты из координат, якорь окна записи
 public/                     # favicon.svg, icon-*.png, apple-touch-icon.png, og-image.png
 ```
@@ -139,6 +152,20 @@ public/                     # favicon.svg, icon-*.png, apple-touch-icon.png, og-
 Правка Caddyfile Lenkrad: файл смонтирован одиночным bind-mount — писать на месте
 (`cat new > Caddyfile`, inode сохраняется), проверять `caddy validate`, применять
 `caddy reload`. Если файл пересоздан (scp/tar) — нужен `docker restart lenkrad-caddy`.
+
+## Фото на проде (временно — сток)
+
+На doccar.pro стоят лицензионные фото Unsplash (Unsplash License: коммерческое
+использование разрешено, атрибуция не обязательна). Это контент (data/uploads),
+не код — заменяются в админке реальными фото сервиса.
+
+| Место | Источник |
+| --- | --- |
+| Главный экран | Lorenzo Fustaino — unsplash.com/photos/WbKt-WmdMf8 |
+| Диагностика | Mehmet Talha Onuk — unsplash.com/photos/dSosKR6g-W8 |
+| ТО | Dextar Studio — unsplash.com/photos/erWc6mrOq_I |
+| Ремонт | Benjamin Brunner — unsplash.com/photos/al01Ad0f_KI |
+| Лента | Kenny Letsoin (WhZ5pWTH4hM), Ahmet Debelemez (mtEBs5jt87U), ün LIU (yqsgL2wKEHA) |
 
 ## TODO (нужны реальные данные)
 

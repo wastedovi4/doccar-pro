@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, Loader2, Trash2 } from "lucide-react";
-import type { Appointment, ApptStatus } from "@/lib/crm";
+import type { Appointment, ApptStatus } from "@/lib/crm-types";
 import type { Content } from "@/lib/content-model";
 
 export type StaffLite = { id: string; name: string; role: string };

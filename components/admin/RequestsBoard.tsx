@@ -13,7 +13,7 @@ import {
   Clock,
   Circle,
 } from "lucide-react";
-import type { Lead, LeadStatus } from "@/lib/crm";
+import type { Lead, LeadStatus } from "@/lib/crm-types";
 import { AppointmentModal, type StaffLite } from "@/components/admin/AppointmentModal";
 
 const STATUS: Record<LeadStatus, { label: string; cls: string }> = {
