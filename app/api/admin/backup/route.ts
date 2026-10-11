@@ -5,6 +5,7 @@ import { getSession, can } from "@/lib/auth";
 import { zipStore } from "@/lib/zip";
 import { snapshot, SCHEMA_VERSION } from "@/lib/crm";
 import { UPLOADS_DIR, isSafeId } from "@/lib/media";
+import { BRAND } from "@/config/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export async function GET() {
 
   const meta = Buffer.from(
     JSON.stringify(
-      { app: "doccar", kind: "backup", version: 3, crm: "sqlite", schema: SCHEMA_VERSION, exportedAt: new Date().toISOString() },
+      { app: BRAND.id, kind: "backup", version: 3, crm: "sqlite", schema: SCHEMA_VERSION, exportedAt: new Date().toISOString() },
       null,
       2
     ),
@@ -63,7 +64,7 @@ export async function GET() {
     status: 200,
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="doccar-backup-${date}.zip"`,
+      "Content-Disposition": `attachment; filename="${BRAND.id}-backup-${date}.zip"`,
       "Content-Length": String(zip.length),
       "Cache-Control": "no-store",
     },

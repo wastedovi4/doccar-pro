@@ -8,6 +8,9 @@
  * с контактами и картой (фикс.). Разделы владелец добавляет, переставляет,
  * скрывает и удаляет сам; тип раздела задаёт вёрстку, данные — его поля.
  *
+ * Значения по умолчанию (тексты конкретного сервиса) — в config/content-defaults.ts:
+ * это файл бренда, модель от него не зависит.
+ *
  * Картинки хранятся как URL загруженных через админку файлов `/api/media/<id>`
  * (или встроенных `/images/*`). Пустая строка — без фото: вёрстка всех разделов
  * рассчитана и на этот случай.
@@ -16,7 +19,7 @@
 export type ServiceItem = {
   icon: string; // ключ иконки, см. lib/icons.tsx -> ICON_KEYS
   title: string;
-  text: string;
+  text: string; // переносы строк сохраняются (бренд может показать их списком)
   image: string;
 };
 
@@ -40,6 +43,7 @@ export const BLOCK_TYPES = [
   "prices",
   "cta",
   "reviews",
+  "brands",
 ] as const;
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
@@ -51,6 +55,7 @@ type BlockBase = {
   anchor: string; // якорь в URL (#anchor), латиница/цифры/дефис
   menuLabel: string; // подпись в меню; "" — раздела нет в меню
   tone: Tone; // фон: обычный или выделенная полоса
+  eyebrow: string; // надзаголовок над заголовком раздела; "" — нет
 };
 
 export type ServicesBlock = BlockBase & { type: "services"; title: string; items: ServiceItem[] };
@@ -84,6 +89,13 @@ export type PricesBlock = BlockBase & {
 };
 export type CtaBlock = BlockBase & { type: "cta"; title: string; text: string; button: string };
 export type ReviewsBlock = BlockBase & { type: "reviews"; title: string; items: ReviewItem[] };
+export type BrandsBlock = BlockBase & {
+  type: "brands";
+  title: string;
+  text: string;
+  items: string[]; // названия марок
+  note: string; // сноска под списком; "" — нет
+};
 
 export type Block =
   | ServicesBlock
@@ -94,7 +106,8 @@ export type Block =
   | FaqBlock
   | PricesBlock
   | CtaBlock
-  | ReviewsBlock;
+  | ReviewsBlock
+  | BrandsBlock;
 
 export type BlockOf<T extends BlockType> = Extract<Block, { type: T }>;
 
@@ -145,6 +158,11 @@ export const BLOCK_META: Record<BlockType, { label: string; description: string;
     description: "Карточки отзывов клиентов: текст, имя, автомобиль.",
     tone: "raised",
   },
+  brands: {
+    label: "Марки",
+    description: "Марки автомобилей, которые обслуживает сервис: плитки с названиями и сноска.",
+    tone: "default",
+  },
 };
 
 /** Короткий id: 8 символов base36. */
@@ -159,7 +177,7 @@ export function blockId(): string {
 /** Новый раздел с шаблонным содержимым. Создаётся скрытым — включается после заполнения. */
 export function createBlock(type: BlockType): Block {
   const id = blockId();
-  const base = { id, visible: false, anchor: `${type}-${id.slice(0, 4)}`, menuLabel: "", tone: BLOCK_META[type].tone };
+  const base = { id, visible: false, anchor: `${type}-${id.slice(0, 4)}`, menuLabel: "", tone: BLOCK_META[type].tone, eyebrow: "" };
   switch (type) {
     case "services":
       return { ...base, type, title: "", items: [{ icon: "wrench", title: "Новая услуга", text: "", image: "" }] };
@@ -202,6 +220,15 @@ export function createBlock(type: BlockType): Block {
       };
     case "reviews":
       return { ...base, type, title: "Отзывы клиентов", items: [{ name: "Имя", meta: "Автомобиль", text: "Текст отзыва." }] };
+    case "brands":
+      return {
+        ...base,
+        type,
+        title: "Обслуживаем марки",
+        text: "",
+        items: ["BMW", "Mercedes-Benz", "Audi", "Volkswagen"],
+        note: "Названия марок указаны только для обозначения специализации сервиса.",
+      };
   }
 }
 
@@ -213,6 +240,8 @@ export type Content = {
     phone: string; // для tel:, напр. "+74951234567" ("" если нет)
     phoneDisplay: string; // как показывать
     email: string; // "" если нет
+    whatsapp: string; // ссылка https://wa.me/…; "" если нет
+    telegram: string; // ссылка https://t.me/…; "" если нет
     city: string; // «Одинцово»
     region: string; // «Московская область»
     street: string; // «ул. Такая-то, 1» ("" пока не уточнён — показываем город)
@@ -222,10 +251,11 @@ export type Content = {
   };
   hero: {
     eyebrow: string;
-    title: string; // первая строка (белая)
-    titleAccent: string; // вторая строка (лайм)
+    title: string; // первая строка
+    titleAccent: string; // вторая строка (акцентный цвет); "" — нет
     subtitle: string;
     image: string;
+    badges: string[]; // короткие плашки под заголовком; [] — нет
   };
   blocks: Block[];
   cta: {
@@ -244,105 +274,6 @@ export type Content = {
     days: boolean[]; // 7 значений: Пн..Вс
     enforce: boolean; // предупреждать при записи вне рабочего времени
   };
-};
-
-export const DEFAULT_BLOCKS: Block[] = [
-  {
-    id: "services",
-    type: "services",
-    visible: true,
-    anchor: "services",
-    menuLabel: "Услуги",
-    tone: "default",
-    title: "",
-    items: [
-      {
-        icon: "monitor-pulse",
-        title: "Диагностика",
-        text: "Компьютерная диагностика, поиск неисправностей, проверка систем.",
-        image: "",
-      },
-      {
-        icon: "tools",
-        title: "ТО и обслуживание",
-        text: "Плановое ТО, замена масел и фильтров, техническое обслуживание.",
-        image: "",
-      },
-      {
-        icon: "gear",
-        title: "Ремонт",
-        text: "Текущий и сложный ремонт узлов и агрегатов.",
-        image: "",
-      },
-    ],
-  },
-  {
-    id: "about",
-    type: "features",
-    visible: true,
-    anchor: "about",
-    menuLabel: "О сервисе",
-    tone: "raised",
-    title: "По делу.\nБез лишних работ.",
-    text: "Честная диагностика, понятные рекомендации и только те работы, которые действительно нужны вашему автомобилю.",
-    items: [
-      { icon: "badge", text: "Опытные мастера с реальным стажем" },
-      { icon: "cpu", text: "Современное оборудование" },
-      { icon: "price", text: "Прозрачные цены и согласование работ" },
-      { icon: "pin", text: "Удобное расположение в Одинцово" },
-    ],
-  },
-  {
-    id: "gallery",
-    type: "gallery",
-    visible: true,
-    anchor: "gallery",
-    menuLabel: "",
-    tone: "default",
-    title: "",
-    // Фото сервиса загружаются из админки; пустая лента на сайте не показывается.
-    photos: [],
-  },
-];
-
-export const DEFAULT_CONTENT: Content = {
-  business: {
-    name: "DOCCAR.PRO",
-    phone: "",
-    phoneDisplay: "",
-    email: "",
-    city: "Одинцово",
-    region: "Московская область",
-    street: "",
-    workingHours: "",
-    openingHoursSpec: "",
-    // Центр Одинцово — уточнить точку сервиса в админке (вкладка «Контакты»).
-    geo: { lat: 55.678, lng: 37.2775 },
-  },
-  hero: {
-    eyebrow: "Автосервис в Одинцово",
-    title: "Разберёмся",
-    titleAccent: "с вашей машиной",
-    subtitle: "Диагностика, обслуживание и ремонт автомобилей в Одинцово.",
-    image: "",
-  },
-  blocks: DEFAULT_BLOCKS,
-  cta: {
-    title: "Остались вопросы?\nНапишите нам — поможем.",
-    text: "Проконсультируем по услугам, подскажем по работам и запишем на удобное время.",
-  },
-  seo: {
-    title: "DOCCAR.PRO — автосервис в Одинцово",
-    description:
-      "Диагностика, техническое обслуживание и ремонт автомобилей в Одинцово. Честная диагностика, понятные рекомендации и согласование работ.",
-    url: "https://doccar.pro",
-  },
-  workHours: {
-    start: 9,
-    end: 20,
-    days: [true, true, true, true, true, true, false], // Пн–Сб
-    enforce: true,
-  },
 };
 
 /** Якоря, занятые самой страницей. */

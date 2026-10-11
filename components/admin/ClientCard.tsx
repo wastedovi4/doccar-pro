@@ -111,7 +111,7 @@ export function ClientCard({ id }: { id: string }) {
       </div>
 
       {msg && (
-        <p className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-lime-50 text-lime-800" : "bg-red-50 text-red-600"}`}>{msg.text}</p>
+        <p className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-600"}`}>{msg.text}</p>
       )}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">

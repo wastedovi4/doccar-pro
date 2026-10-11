@@ -1,14 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 import { ArrowRight } from "lucide-react";
 import { resolveIcon } from "@/lib/icons";
-import { BOOKING_HREF } from "@/config/site";
+import { BOOKING_HREF } from "@/lib/site";
 import type { ServicesBlock as Data } from "@/lib/content-model";
 import { BlockHeading, BlockShell } from "@/components/blocks/BlockShell";
 
 export function ServicesBlock({ block }: { block: Data }) {
   return (
     <BlockShell anchor={block.anchor} tone={block.tone} label={block.title ? undefined : "Услуги"}>
-      <BlockHeading title={block.title} className="mb-10" />
+      <BlockHeading eyebrow={block.eyebrow} title={block.title} className="mb-10" />
       <div className="grid gap-5 md:grid-cols-3">
         {block.items.map((service, i) => {
           const Icon = resolveIcon(service.icon);
@@ -40,7 +40,7 @@ export function ServicesBlock({ block }: { block: Data }) {
               <div className={`flex flex-1 flex-col px-6 pb-6 ${service.image ? "pt-3" : "pt-7"}`}>
                 <Icon className="h-9 w-9 text-accent [stroke-width:1.6]" aria-hidden />
                 <h3 className="mt-5 font-display text-xl font-bold text-white">{service.title}</h3>
-                <p className="mt-2.5 pr-12 text-sm leading-relaxed text-frost/65">{service.text}</p>
+                <p className="mt-2.5 whitespace-pre-line pr-12 text-sm leading-relaxed text-frost/65">{service.text}</p>
               </div>
 
               <a

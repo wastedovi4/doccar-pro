@@ -1,5 +1,5 @@
 import { Phone, Navigation, CalendarCheck } from "lucide-react";
-import { mapLinks, BOOKING_HREF } from "@/config/site";
+import { mapLinks, BOOKING_HREF } from "@/lib/site";
 import type { Geo } from "@/lib/content-model";
 
 /**

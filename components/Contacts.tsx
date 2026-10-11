@@ -1,5 +1,5 @@
-import { ArrowRight, MapPin, Phone, Clock, Mail, Navigation } from "lucide-react";
-import { mapLinks, BOOKING_HREF } from "@/config/site";
+import { ArrowRight, MapPin, Phone, Clock, Mail, Navigation, MessageCircle, Send } from "lucide-react";
+import { mapLinks, BOOKING_HREF } from "@/lib/site";
 import { fullAddress, type Content } from "@/lib/content-model";
 
 /** Финальный CTA: «Остались вопросы?» + контакты + тёмная карта с маркером. */
@@ -28,6 +28,8 @@ export function Contacts({
       value: business.email,
       href: `mailto:${business.email}`,
     },
+    business.whatsapp && { icon: MessageCircle, label: "WhatsApp", value: "Написать в WhatsApp", href: business.whatsapp },
+    business.telegram && { icon: Send, label: "Telegram", value: "Написать в Telegram", href: business.telegram },
   ].filter(Boolean) as { icon: typeof Phone; label: string; value: string; href?: string }[];
 
   return (
@@ -60,7 +62,11 @@ export function Contacts({
                     <dt className="text-xs uppercase tracking-[0.12em] text-frost/45">{d.label}</dt>
                     <dd className="mt-1 text-sm text-frost/90">
                       {d.href ? (
-                        <a href={d.href} className="transition-colors hover:text-accent">
+                        <a
+                          href={d.href}
+                          {...(d.href.startsWith("https://") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                          className="transition-colors hover:text-accent"
+                        >
                           {d.value}
                         </a>
                       ) : (

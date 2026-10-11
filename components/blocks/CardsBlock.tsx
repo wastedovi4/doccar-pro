@@ -7,7 +7,7 @@ export function CardsBlock({ block }: { block: Data }) {
   const cols = block.items.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3";
   return (
     <BlockShell anchor={block.anchor} tone={block.tone}>
-      <BlockHeading title={block.title} text={block.text} className="mb-10" />
+      <BlockHeading eyebrow={block.eyebrow} title={block.title} text={block.text} className="mb-10" />
       <ol className={`grid gap-5 sm:grid-cols-2 ${cols}`}>
         {block.items.map((item, i) => {
           const Icon = resolveIcon(item.icon);

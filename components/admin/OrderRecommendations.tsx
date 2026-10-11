@@ -85,7 +85,7 @@ export function OrderRecommendations({
             {carried.map((r) => {
               const doneHere = r.status === "done" && r.resolvedOrderId === orderId;
               return (
-                <li key={r.id} className={`flex flex-wrap items-start gap-3 rounded-lg border p-3 ${doneHere ? "border-lime-200 bg-lime-50/60" : "border-line"}`}>
+                <li key={r.id} className={`flex flex-wrap items-start gap-3 rounded-lg border p-3 ${doneHere ? "border-emerald-200 bg-emerald-50/60" : "border-line"}`}>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <PriorityChip p={r.priority} />

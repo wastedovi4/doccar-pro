@@ -1,6 +1,6 @@
 import { resolveIcon } from "@/lib/icons";
 import type { FeaturesBlock as Data } from "@/lib/content-model";
-import { BlockShell } from "@/components/blocks/BlockShell";
+import { BlockShell, Kicker } from "@/components/blocks/BlockShell";
 
 /** «По делу. Без лишних работ.» — подход сервиса + короткие пункты с иконками. */
 export function FeaturesBlock({ block }: { block: Data }) {
@@ -12,7 +12,7 @@ export function FeaturesBlock({ block }: { block: Data }) {
     <BlockShell anchor={block.anchor} tone={block.tone}>
       <div className="grid gap-10 lg:grid-cols-[1fr_1.15fr] lg:items-center lg:gap-16">
         <div>
-          <span className="rule" aria-hidden />
+          <Kicker eyebrow={block.eyebrow} />
           <h2 className="mt-7 whitespace-pre-line font-display text-[34px] font-extrabold leading-[1.12] text-white sm:text-[44px]">
             {block.title}
           </h2>

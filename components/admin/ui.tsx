@@ -51,7 +51,7 @@ export function Modal({
 const STATUS_CLS: Record<WorkOrderStatus, string> = {
   open: "bg-sky-50 text-sky-700",
   in_progress: "bg-amber-50 text-amber-700",
-  ready: "bg-lime-100 text-lime-800",
+  ready: "bg-emerald-100 text-emerald-800",
   closed: "bg-mist text-muted",
   cancelled: "bg-red-50 text-red-600",
 };

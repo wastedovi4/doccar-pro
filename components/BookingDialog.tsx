@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { ContactForm } from "@/components/ContactForm";
-import { BOOKING_HREF } from "@/config/site";
+import { BOOKING_HREF } from "@/lib/site";
 
 /**
  * Окно записи на сервис. Открывается любой ссылкой href="#booking"

@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import type { TextBlock as Data } from "@/lib/content-model";
-import { BlockShell } from "@/components/blocks/BlockShell";
+import { BlockShell, Kicker } from "@/components/blocks/BlockShell";
 
 /** Текст с фото: абзацы разделяются пустой строкой. */
 export function TextBlock({ block }: { block: Data }) {
@@ -10,7 +10,7 @@ export function TextBlock({ block }: { block: Data }) {
     .filter(Boolean);
   const body = (
     <div className={block.image ? "" : "max-w-3xl"}>
-      <span className="rule" aria-hidden />
+      <Kicker eyebrow={block.eyebrow} />
       {block.title && (
         <h2 className="mt-6 whitespace-pre-line font-display text-[30px] font-extrabold leading-[1.15] text-white sm:text-4xl">
           {block.title}

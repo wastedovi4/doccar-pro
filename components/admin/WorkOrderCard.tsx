@@ -213,7 +213,7 @@ export function WorkOrderCard({ id, role }: { id: string; role: Role }) {
         </p>
       )}
       {msg && (
-        <p className={`break-all rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-lime-50 text-lime-800" : "bg-red-50 text-red-600"}`}>{msg.text}</p>
+        <p className={`break-all rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-600"}`}>{msg.text}</p>
       )}
 
       <div className="grid gap-4 lg:grid-cols-3">

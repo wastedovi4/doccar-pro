@@ -51,6 +51,8 @@ export function JsonLd({ content }: { content: Content }) {
   if (business.phone) data.telephone = business.phone;
   if (business.email) data.email = business.email;
   if (business.openingHoursSpec) data.openingHours = business.openingHoursSpec;
+  const sameAs = [business.telegram, business.whatsapp].filter(Boolean);
+  if (sameAs.length) data.sameAs = sameAs;
 
   const graphs: Record<string, unknown>[] = [data];
   if (faq.length) {

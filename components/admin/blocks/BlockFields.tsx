@@ -3,7 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 import { useRef, useState } from "react";
 import { Loader2, Upload } from "lucide-react";
-import { DEFAULT_BLOCKS, type Block } from "@/lib/content-model";
+import type { Block } from "@/lib/content-model";
+import { DEFAULT_BLOCKS } from "@/config/content-defaults";
 import {
   Area,
   Field,
@@ -250,6 +251,22 @@ export function BlockFields({
             )}
           />
           <p className="text-xs text-muted">Публикуйте только реальные отзывы клиентов.</p>
+        </div>
+      );
+
+    case "brands":
+      return (
+        <div className="space-y-4">
+          <Area label="Заголовок" value={block.title} rows={2} onChange={(title) => patch({ title })} hint={LINE_BREAK_HINT} />
+          <Area label="Текст" value={block.text} rows={3} onChange={(text) => patch({ text })} />
+          <Area
+            label="Марки"
+            value={block.items.join("\n")}
+            rows={6}
+            onChange={(v) => patch({ items: v.split("\n") })}
+            hint="По одной марке на строку. Пустые строки не сохраняются."
+          />
+          <Area label="Сноска под списком" value={block.note} rows={2} onChange={(note) => patch({ note })} />
         </div>
       );
   }

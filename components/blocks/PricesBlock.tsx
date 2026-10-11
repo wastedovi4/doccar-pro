@@ -6,7 +6,7 @@ export function PricesBlock({ block }: { block: Data }) {
   const items = block.items.filter((x) => x.name.trim());
   return (
     <BlockShell anchor={block.anchor} tone={block.tone}>
-      <BlockHeading title={block.title} className="mb-10" />
+      <BlockHeading eyebrow={block.eyebrow} title={block.title} className="mb-10" />
       <div className="panel divide-y divide-white/[0.07] bg-night/40">
         {items.map((item, i) => (
           <div key={i} className="flex items-baseline justify-between gap-6 px-6 py-4">

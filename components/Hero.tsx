@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { ArrowRight, MapPin } from "lucide-react";
-import { BOOKING_HREF } from "@/config/site";
+import { BOOKING_HREF } from "@/lib/site";
 import { LogoMark } from "@/components/Logo";
 import type { Content } from "@/lib/content-model";
 
@@ -18,7 +18,7 @@ function BrandBackdrop() {
           WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 70% 45%, #000 30%, transparent 100%)",
         }}
       />
-      <div className="absolute -right-32 top-1/3 h-[560px] w-[760px] rounded-full bg-lime/[0.09] blur-[140px]" />
+      <div className="absolute -right-32 top-1/3 h-[560px] w-[760px] rounded-full bg-volt/[0.09] blur-[140px]" />
       <LogoMark className="absolute right-[-4%] top-1/2 hidden h-[86%] w-auto -translate-y-1/2 opacity-[0.07] lg:block" />
       {/* Линия пульса: на десктопе — правее текста, на узких экранах — под кнопками */}
       <svg
@@ -79,6 +79,19 @@ export function Hero({ hero }: { hero: Content["hero"] }) {
           <p className="animate-fade-up mt-6 max-w-md text-base leading-relaxed text-frost/80 sm:text-lg">
             {hero.subtitle}
           </p>
+
+          {hero.badges.length > 0 && (
+            <ul className="animate-fade-up mt-6 flex flex-wrap gap-2">
+              {hero.badges.map((badge, i) => (
+                <li
+                  key={`${badge}-${i}`}
+                  className="rounded-full border border-white/15 bg-night/40 px-3 py-1 text-xs font-medium text-frost/80"
+                >
+                  {badge}
+                </li>
+              ))}
+            </ul>
+          )}
 
           <div className="animate-fade-up mt-10 flex flex-col gap-3 sm:flex-row">
             <a href={BOOKING_HREF} className="btn-primary px-7">

@@ -8,6 +8,7 @@ import {
   Blocks,
   ChevronDown,
   CircleHelp,
+  CarFront,
   Copy,
   Eye,
   EyeOff,
@@ -43,6 +44,7 @@ const TYPE_ICON: Record<BlockType, typeof Blocks> = {
   prices: Receipt,
   cta: Megaphone,
   reviews: MessageSquareQuote,
+  brands: CarFront,
 };
 
 /** Подпись раздела в списке: его заголовок (первая строка) или название типа. */
@@ -241,6 +243,13 @@ export function BlocksEditor({
                     />
                   </div>
 
+                  <Field
+                    label="Надзаголовок"
+                    value={b.eyebrow}
+                    onChange={(eyebrow) => patch(b.id, { eyebrow })}
+                    placeholder="Необязательно"
+                    hint="Короткая строка над заголовком раздела."
+                  />
                   <BlockFields block={b} patch={(p) => patch(b.id, p)} onError={onError} />
                 </div>
               )}

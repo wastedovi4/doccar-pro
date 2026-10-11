@@ -134,7 +134,7 @@ export function RequestsBoard() {
                         <a
                           href={`/admin/clients/${lead.clientId}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="rounded-full bg-lime-100 px-2 py-0.5 text-xs font-medium text-lime-800 hover:underline"
+                          className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 hover:underline"
                           title="Заявка из личного кабинета — открыть карточку клиента"
                         >
                           из ЛК

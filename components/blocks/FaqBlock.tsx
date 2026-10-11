@@ -8,7 +8,7 @@ export function FaqBlock({ block }: { block: Data }) {
   return (
     <BlockShell anchor={block.anchor} tone={block.tone}>
       <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr] lg:gap-16">
-        <BlockHeading title={block.title} />
+        <BlockHeading eyebrow={block.eyebrow} title={block.title} />
         <div className="space-y-3">
           {items.map((item, i) => (
             <details key={i} className="panel group px-6 py-5 [&_summary::-webkit-details-marker]:hidden">

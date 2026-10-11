@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
-import { LogoMark } from "@/components/Logo";
+import { LogoMark, Wordmark } from "@/components/Logo";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
         <div className="mb-6 flex flex-col items-center text-center">
           <LogoMark className="h-12 w-auto" />
           <h1 className="mt-4 text-xl font-bold text-white">
-            Админка <span className="font-brand tracking-wide">DOCCAR<span className="text-lime">.PRO</span></span>
+            Админка <Wordmark />
           </h1>
           <p className="mt-1 text-sm text-white/50">Вход для управления сайтом</p>
         </div>

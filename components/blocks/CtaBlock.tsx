@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { BOOKING_HREF } from "@/config/site";
+import { BOOKING_HREF } from "@/lib/site";
 import type { CtaBlock as Data } from "@/lib/content-model";
 import { BlockShell } from "@/components/blocks/BlockShell";
 import { LogoMark } from "@/components/Logo";
@@ -12,6 +12,7 @@ export function CtaBlock({ block }: { block: Data }) {
         <LogoMark className="pointer-events-none absolute -right-10 top-1/2 hidden h-56 w-auto -translate-y-1/2 opacity-[0.07] md:block" />
         <div className="relative flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl">
+            {block.eyebrow && <p className="eyebrow mb-4">{block.eyebrow}</p>}
             <h2 className="whitespace-pre-line font-display text-[28px] font-extrabold leading-[1.15] text-white sm:text-4xl">
               {block.title}
             </h2>

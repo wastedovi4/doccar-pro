@@ -1,4 +1,4 @@
-# DOCCAR.PRO — Next.js 14 (серверный рантайм: админка + API).
+# Сайт автосервиса на движке doccar — Next.js 14 (серверный рантайм: сайт, админка, CRM, ЛК).
 # Node 24: встроенный node:sqlite (CRM-база data/crm.db) — без нативных модулей.
 FROM node:24-alpine
 WORKDIR /app

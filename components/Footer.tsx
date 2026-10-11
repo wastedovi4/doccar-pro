@@ -1,6 +1,6 @@
 import { MapPin, Phone, Clock } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { mapLinks } from "@/config/site";
+import { mapLinks } from "@/lib/site";
 import { fullAddress, type Content } from "@/lib/content-model";
 
 export function Footer({

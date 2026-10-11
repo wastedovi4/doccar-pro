@@ -36,6 +36,15 @@ export function LogoMark({
   );
 }
 
+/** Вордмарк строкой — для шапки админки и экрана входа (контракт движка, см. docs/ENGINE.md). */
+export function Wordmark({ className = "" }: { className?: string }) {
+  return (
+    <span className={`font-brand tracking-wide ${className}`}>
+      DOCCAR<span className="text-volt">.PRO</span>
+    </span>
+  );
+}
+
 export function Logo({
   tagline = "Автосервис Одинцово",
   size = "md",
@@ -55,7 +64,7 @@ export function Logo({
             lg ? "text-[26px]" : "text-[19px]"
           }`}
         >
-          DOCCAR<span className="text-lime">.PRO</span>
+          DOCCAR<span className="text-volt">.PRO</span>
         </span>
         {tagline && (
           <span

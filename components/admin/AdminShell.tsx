@@ -20,7 +20,8 @@ import {
 } from "lucide-react";
 import type { Role } from "@/lib/crm-types";
 import { NotificationCenter } from "@/components/admin/NotificationCenter";
-import { LogoMark } from "@/components/Logo";
+import { LogoMark, Wordmark } from "@/components/Logo";
+import { BRAND } from "@/config/brand";
 
 const ROLE_LABEL: Record<Role, string> = {
   admin: "Владелец",
@@ -93,7 +94,7 @@ export function AdminShell({
       {/* Мобильная шапка */}
       <div className="theme-dark flex items-center justify-between border-b border-line bg-night px-4 py-3 text-white lg:hidden">
         <span className="inline-flex items-center gap-2 font-bold">
-          <LogoMark className="h-5 w-auto" /> DOCCAR · CRM
+          <LogoMark className="h-5 w-auto" /> {BRAND.crmTitle}
         </span>
         <button
           onClick={() => setOpen((v) => !v)}
@@ -113,7 +114,7 @@ export function AdminShell({
         <div className="mb-6 hidden lg:block">
           <div className="flex items-center gap-2.5 text-lg font-bold">
             <LogoMark className="h-6 w-auto" />
-            <span className="font-brand tracking-wide">DOCCAR<span className="text-lime">.PRO</span></span>
+            <Wordmark />
           </div>
           <div className="mt-1 text-xs text-white/50">
             {user.name} · {ROLE_LABEL[user.role]}

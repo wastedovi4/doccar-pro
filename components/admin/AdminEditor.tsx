@@ -16,7 +16,9 @@ import {
   ExternalLink,
   Rows3,
 } from "lucide-react";
-import { DEFAULT_CONTENT, type Content } from "@/lib/content-model";
+import type { Content } from "@/lib/content-model";
+import { DEFAULT_CONTENT } from "@/config/content-defaults";
+import { BRAND } from "@/config/brand";
 import { Area, Card, Field, ImageField, inputCls } from "@/components/admin/fields";
 import { BlocksEditor } from "@/components/admin/blocks/BlocksEditor";
 
@@ -168,17 +170,24 @@ export function AdminEditor({ initial }: { initial: Content }) {
               <Field label="Надзаголовок" value={content.hero.eyebrow} onChange={(v) => patch("hero", { eyebrow: v })} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
-                  label="Заголовок — строка 1 (белая)"
+                  label="Заголовок — строка 1"
                   value={content.hero.title}
                   onChange={(v) => patch("hero", { title: v })}
                 />
                 <Field
-                  label="Заголовок — строка 2 (лаймовая)"
+                  label="Заголовок — строка 2 (акцентным цветом)"
                   value={content.hero.titleAccent}
                   onChange={(v) => patch("hero", { titleAccent: v })}
                 />
               </div>
               <Area label="Подзаголовок" value={content.hero.subtitle} onChange={(v) => patch("hero", { subtitle: v })} rows={2} />
+              <Area
+                label="Плашки под заголовком"
+                value={content.hero.badges.join("\n")}
+                onChange={(v) => patch("hero", { badges: v.split("\n") })}
+                rows={3}
+                hint="По одной на строку, до 8 коротких. Пусто — без плашек."
+              />
               <ImageField
                 label="Фото на главном экране"
                 value={content.hero.image}
@@ -230,9 +239,25 @@ export function AdminEditor({ initial }: { initial: Content }) {
                 label="E-mail"
                 value={b.email}
                 onChange={(v) => patch("business", { email: v })}
-                placeholder="info@doccar.pro"
+                placeholder={BRAND.placeholders.email}
                 hint="Необязательно."
               />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label="WhatsApp"
+                  value={b.whatsapp}
+                  onChange={(v) => patch("business", { whatsapp: v.trim() })}
+                  placeholder="https://wa.me/74951234567"
+                  hint="Ссылка https://. Пусто — кнопки нет."
+                />
+                <Field
+                  label="Telegram"
+                  value={b.telegram}
+                  onChange={(v) => patch("business", { telegram: v.trim() })}
+                  placeholder="https://t.me/имя"
+                  hint="Ссылка https://. Пусто — кнопки нет."
+                />
+              </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field label="Город" value={b.city} onChange={(v) => patch("business", { city: v })} />
@@ -241,7 +266,7 @@ export function AdminEditor({ initial }: { initial: Content }) {
                   label="Улица, дом"
                   value={b.street}
                   onChange={(v) => patch("business", { street: v })}
-                  placeholder="ул. Такая-то, 1"
+                  placeholder={BRAND.placeholders.street}
                   hint="Пусто — на сайте показывается город."
                 />
               </div>
@@ -258,7 +283,7 @@ export function AdminEditor({ initial }: { initial: Content }) {
                   <input
                     value={coords}
                     onChange={(e) => applyCoords(e.target.value)}
-                    placeholder="55.678, 37.2775"
+                    placeholder={BRAND.placeholders.geo}
                     aria-invalid={!coordsValid}
                     className={`${inputCls} sm:max-w-xs ${coordsValid ? "" : "border-red-400"}`}
                   />
@@ -384,7 +409,7 @@ export function AdminEditor({ initial }: { initial: Content }) {
                 label="Домен сайта"
                 value={content.seo.url}
                 onChange={(v) => patch("seo", { url: v })}
-                placeholder="https://doccar.pro"
+                placeholder={BRAND.placeholders.siteUrl}
                 hint="Полный адрес с https:// — влияет на canonical, sitemap и Open Graph."
               />
             </div>
@@ -401,7 +426,7 @@ export function AdminEditor({ initial }: { initial: Content }) {
           }`}
         >
           {toast.type === "ok" ? (
-            <CheckCircle2 className="h-4 w-4 text-lime" aria-hidden />
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden />
           ) : (
             <AlertCircle className="h-4 w-4" aria-hidden />
           )}

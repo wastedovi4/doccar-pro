@@ -7,7 +7,7 @@ export function ReviewsBlock({ block }: { block: Data }) {
   const items = block.items.filter((x) => x.text.trim());
   return (
     <BlockShell anchor={block.anchor} tone={block.tone}>
-      <BlockHeading title={block.title} className="mb-10" />
+      <BlockHeading eyebrow={block.eyebrow} title={block.title} className="mb-10" />
       <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {items.map((r, i) => (
           <li key={i} className="panel flex flex-col bg-night/40 p-6">

@@ -23,12 +23,27 @@ export function BlockShell({
   );
 }
 
-/** Заголовок раздела: лаймовая черта, H2 (переносы строк сохраняются), текст. */
-export function BlockHeading({ title, text, className = "" }: { title: string; text?: string; className?: string }) {
-  if (!title && !text) return null;
+/** Над заголовком: надзаголовок раздела, если задан, иначе фирменная черта. */
+export function Kicker({ eyebrow }: { eyebrow?: string }) {
+  return eyebrow ? <p className="eyebrow">{eyebrow}</p> : <span className="rule" aria-hidden />;
+}
+
+/** Заголовок раздела: надзаголовок или черта, H2 (переносы строк сохраняются), текст. */
+export function BlockHeading({
+  eyebrow,
+  title,
+  text,
+  className = "",
+}: {
+  eyebrow?: string;
+  title: string;
+  text?: string;
+  className?: string;
+}) {
+  if (!title && !text && !eyebrow) return null;
   return (
     <div className={`max-w-3xl ${className}`}>
-      <span className="rule" aria-hidden />
+      <Kicker eyebrow={eyebrow} />
       {title && (
         <h2 className="mt-6 whitespace-pre-line font-display text-[30px] font-extrabold leading-[1.15] text-white sm:text-4xl">
           {title}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Menu, X, Phone } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { BOOKING_HREF } from "@/config/site";
+import { BOOKING_HREF } from "@/lib/site";
 import type { Content } from "@/lib/content-model";
 
 export function Header({

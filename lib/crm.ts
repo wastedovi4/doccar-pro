@@ -13,6 +13,7 @@ import {
   type Role,
   type User,
 } from "@/lib/crm-types";
+import { BRAND } from "@/config/brand";
 
 /**
  * Репозитории CRM поверх SQLite (lib/db.ts): сотрудники, заявки с сайта,
@@ -636,7 +637,7 @@ setInitializer((d) => {
   if (users === 0) {
     d.prepare(
       "INSERT INTO users (id, login, name, role, password, active, created_at) VALUES (?, ?, 'Владелец', 'admin', ?, 1, ?)"
-    ).run(uid(), process.env.ADMIN_LOGIN || "doccar", hashPassword(process.env.ADMIN_PASSWORD || "doccar-admin"), now());
+    ).run(uid(), process.env.ADMIN_LOGIN || BRAND.defaultAdminLogin, hashPassword(process.env.ADMIN_PASSWORD || BRAND.defaultAdminPassword), now());
   }
 });
 

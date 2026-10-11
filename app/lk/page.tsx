@@ -3,7 +3,7 @@ import { ArrowRight, CalendarCheck, Car, ChevronRight, Lightbulb, MapPin, Phone,
 import { getClientSession } from "@/lib/client-access";
 import { getLkDashboard } from "@/lib/lk";
 import { getContent, fullAddress, serviceTitles } from "@/lib/content";
-import { mapLinks } from "@/config/site";
+import { mapLinks } from "@/lib/site";
 import { formatMileage, plateDisplay, rub, woNumber } from "@/lib/format";
 import { REC_PRIORITY_LABEL, WO_STATUS_LABEL, type RecPriority } from "@/lib/crm-types";
 import { LkHeader } from "@/components/lk/LkHeader";
