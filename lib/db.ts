@@ -77,6 +77,64 @@ const MIGRATIONS: string[] = [
 
   CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   `,
+
+  // v2: клиенты, автомобили, заказ-наряды
+  `
+  CREATE TABLE clients (
+    id          TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    phone       TEXT NOT NULL DEFAULT '',
+    phone_norm  TEXT,                       -- 7XXXXXXXXXX: ключ склейки
+    email       TEXT NOT NULL DEFAULT '',
+    note        TEXT NOT NULL DEFAULT '',
+    search      TEXT NOT NULL DEFAULT '',   -- нижний регистр: имя, телефон, госномера (LIKE не знает кириллический регистр)
+    created_at  TEXT NOT NULL,
+    created_by  TEXT REFERENCES users(id) ON DELETE SET NULL,
+    updated_at  TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX clients_phone ON clients (phone_norm) WHERE phone_norm IS NOT NULL;
+  CREATE INDEX clients_updated ON clients (updated_at DESC);
+
+  CREATE TABLE vehicles (
+    id          TEXT PRIMARY KEY,
+    client_id   TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    make        TEXT NOT NULL DEFAULT '',
+    model       TEXT NOT NULL DEFAULT '',
+    year        INTEGER CHECK (year IS NULL OR year BETWEEN 1900 AND 2100),
+    plate       TEXT NOT NULL DEFAULT '',   -- ключ госномера (plateKey)
+    vin         TEXT NOT NULL DEFAULT '',
+    mileage     INTEGER CHECK (mileage IS NULL OR mileage >= 0),
+    note        TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL
+  );
+  CREATE INDEX vehicles_client ON vehicles (client_id);
+  CREATE INDEX vehicles_plate ON vehicles (plate) WHERE plate != '';
+
+  CREATE TABLE work_orders (
+    id              TEXT PRIMARY KEY,
+    number          INTEGER NOT NULL UNIQUE,
+    client_id       TEXT NOT NULL REFERENCES clients(id) ON DELETE RESTRICT,
+    vehicle_id      TEXT REFERENCES vehicles(id) ON DELETE RESTRICT,
+    appointment_id  TEXT UNIQUE REFERENCES appointments(id) ON DELETE SET NULL,
+    mechanic_id     TEXT REFERENCES users(id) ON DELETE SET NULL,
+    status          TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'ready', 'closed', 'cancelled')),
+    complaint       TEXT NOT NULL DEFAULT '',
+    mileage         INTEGER CHECK (mileage IS NULL OR mileage >= 0),
+    note            TEXT NOT NULL DEFAULT '',
+    opened_at       TEXT NOT NULL,
+    closed_at       TEXT,
+    created_by      TEXT REFERENCES users(id) ON DELETE SET NULL,
+    updated_at      TEXT NOT NULL
+  );
+  CREATE INDEX wo_status ON work_orders (status, opened_at DESC);
+  CREATE INDEX wo_client ON work_orders (client_id);
+  CREATE INDEX wo_mechanic ON work_orders (mechanic_id, status);
+
+  -- История клиента: записи и заявки, привязанные при «Клиент приехал»
+  ALTER TABLE appointments ADD COLUMN client_id TEXT REFERENCES clients(id) ON DELETE SET NULL;
+  ALTER TABLE leads ADD COLUMN client_id TEXT REFERENCES clients(id) ON DELETE SET NULL;
+  CREATE INDEX appt_client ON appointments (client_id);
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;
@@ -167,6 +225,29 @@ export function transaction<T>(fn: (d: DatabaseSync) => T): T {
   } catch (e) {
     depth--;
     d.exec(depth === 0 ? "ROLLBACK" : `ROLLBACK TO ${sp}; RELEASE ${sp}`);
+    throw e;
+  }
+}
+
+/**
+ * Бизнес-отказ внутри транзакции: бросается вместо «return { err }», чтобы
+ * откатить уже сделанные шаги, и превращается в ответ { err, code } в attempt().
+ */
+export class Rejection extends Error {
+  constructor(
+    message: string,
+    public code: number
+  ) {
+    super(message);
+  }
+}
+
+/** Транзакция, где отказ (Rejection) откатывает всё и возвращается как { err, code }. */
+export function attempt<T>(fn: (d: DatabaseSync) => T): T | { err: string; code: number } {
+  try {
+    return transaction(fn);
+  } catch (e) {
+    if (e instanceof Rejection) return { err: e.message, code: e.code };
     throw e;
   }
 }

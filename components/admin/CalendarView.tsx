@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react";
 import type { Appointment, ApptStatus, Role } from "@/lib/crm-types";
 import type { Content } from "@/lib/content-model";
+import { useRouter } from "next/navigation";
 import { AppointmentModal, type StaffLite } from "@/components/admin/AppointmentModal";
+import { IntakeDialog } from "@/components/admin/IntakeDialog";
 
 const HOUR_H = 48;
 const DAY_NAMES = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -105,6 +107,8 @@ export function CalendarView({
   const [editing, setEditing] = useState<Appointment | null>(null);
   const [defaults, setDefaults] = useState<{ date?: string; time?: string; mechanicId?: string }>({});
   const [hover, setHover] = useState<{ a: Appointment; x: number; y: number } | null>(null);
+  const [intakeFor, setIntakeFor] = useState<Appointment | null>(null);
+  const router = useRouter();
   // Тултип-превью — только для мыши (на тач-экранах наведение = тап, не нужно).
   const [canHover, setCanHover] = useState(false);
   useEffect(() => {
@@ -355,7 +359,23 @@ export function CalendarView({
         defaultTime={defaults.time}
         defaultMechanicId={defaults.mechanicId}
         workHours={workHours}
+        onIntake={
+          manager
+            ? (a) => {
+                setModalOpen(false);
+                setIntakeFor(a);
+              }
+            : undefined
+        }
       />
+      {intakeFor && (
+        <IntakeDialog
+          appointment={intakeFor}
+          staff={staff}
+          onClose={() => setIntakeFor(null)}
+          onDone={(o) => router.push(`/admin/orders/${o.id}`)}
+        />
+      )}
     </div>
   );
 

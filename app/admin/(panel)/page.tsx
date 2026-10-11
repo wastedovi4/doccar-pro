@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Inbox, CalendarDays, Wrench, ArrowRight } from "lucide-react";
+import { Inbox, CalendarDays, Wrench, ArrowRight, ClipboardList } from "lucide-react";
 import { getSession, can } from "@/lib/auth";
 import { countNewLeads, countTodayAppointments } from "@/lib/crm";
+import { countActiveWorkOrders } from "@/lib/orders";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function DashboardHome() {
   if (!user) redirect("/admin/login");
   const newLeads = countNewLeads();
   const todayAppts = countTodayAppointments(user.role === "mechanic" ? user.id : undefined);
+  const activeOrders = countActiveWorkOrders(user);
 
   const cards: { href: string; icon: typeof Inbox; label: string; value: number | string; hint: string; show: boolean }[] = [
     {
@@ -28,6 +30,14 @@ export default async function DashboardHome() {
       label: user.role === "mechanic" ? "Мои работы сегодня" : "Записи на сегодня",
       value: todayAppts,
       hint: "в календаре",
+      show: true,
+    },
+    {
+      href: "/admin/orders",
+      icon: ClipboardList,
+      label: user.role === "mechanic" ? "Мои заказ-наряды" : "Заказ-наряды в работе",
+      value: activeOrders,
+      hint: "открыты, в работе, готовы",
       show: true,
     },
   ];

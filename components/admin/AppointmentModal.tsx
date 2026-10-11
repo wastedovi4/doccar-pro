@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Loader2, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { X, Loader2, Trash2, ClipboardPlus, ClipboardList } from "lucide-react";
+import { woNumber } from "@/lib/format";
 import type { Appointment, ApptStatus } from "@/lib/crm-types";
 import type { Content } from "@/lib/content-model";
 
@@ -39,6 +41,7 @@ export function AppointmentModal({
   defaultMechanicId,
   restricted = false,
   workHours,
+  onIntake,
 }: {
   open: boolean;
   onClose: () => void;
@@ -52,6 +55,7 @@ export function AppointmentModal({
   defaultMechanicId?: string;
   restricted?: boolean; // механик: можно менять только статус
   workHours?: Content["workHours"];
+  onIntake?: (appointment: Appointment) => void; // «Клиент приехал» → заказ-наряд
 }) {
   const isEdit = !!initial?.id;
   const mechanics = staff.filter((s) => s.role === "mechanic");
@@ -204,6 +208,25 @@ export function AppointmentModal({
         </div>
 
         <div className="space-y-3">
+          {isEdit && initial!.workOrderId && (
+            <Link
+              href={`/admin/orders/${initial!.workOrderId}`}
+              className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2.5 text-sm font-medium text-accent hover:bg-accent/10"
+            >
+              <ClipboardList className="h-4 w-4" aria-hidden />
+              Заказ-наряд {woNumber(initial!.workOrderNumber ?? 0)} — открыть
+            </Link>
+          )}
+          {isEdit && !restricted && onIntake && !initial!.workOrderId && initial!.status !== "cancelled" && (
+            <button
+              type="button"
+              onClick={() => onIntake(initial!)}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-accent bg-accent/5 px-3 py-2.5 text-sm font-semibold text-accent hover:bg-accent/10"
+            >
+              <ClipboardPlus className="h-4 w-4" aria-hidden />
+              Клиент приехал → заказ-наряд
+            </button>
+          )}
           {restricted && (
             <p className="rounded-lg bg-mist px-3 py-2 text-xs text-muted">
               Вы можете менять только статус этой записи.

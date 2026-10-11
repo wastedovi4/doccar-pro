@@ -99,8 +99,15 @@ function toAppointment(r: Row): Appointment {
     note: opt(r.note),
     createdBy: opt(r.created_by),
     createdAt: String(r.created_at),
+    clientId: opt(r.client_id),
+    workOrderId: opt(r.wo_id),
+    workOrderNumber: r.wo_number === null || r.wo_number === undefined ? undefined : Number(r.wo_number),
   };
 }
+
+/** Записи вместе с открытым по ним заказ-нарядом. */
+const APPT_SELECT =
+  "SELECT a.*, w.id AS wo_id, w.number AS wo_number FROM appointments a LEFT JOIN work_orders w ON w.appointment_id = a.id";
 
 export function clampDuration(v: unknown): number {
   const n = Number(v);
@@ -276,15 +283,17 @@ export function updateLead(
 
 /* ---------- записи календаря ---------- */
 
-export function listAppointments(filter: { mechanicId?: string } = {}): Appointment[] {
+export function listAppointments(filter: { mechanicId?: string; clientId?: string } = {}): Appointment[] {
   const rows = filter.mechanicId
-    ? db().prepare("SELECT * FROM appointments WHERE mechanic_id = ? ORDER BY start_ms").all(filter.mechanicId)
-    : db().prepare("SELECT * FROM appointments ORDER BY start_ms").all();
+    ? db().prepare(`${APPT_SELECT} WHERE a.mechanic_id = ? ORDER BY a.start_ms`).all(filter.mechanicId)
+    : filter.clientId
+      ? db().prepare(`${APPT_SELECT} WHERE a.client_id = ? ORDER BY a.start_ms DESC`).all(filter.clientId)
+      : db().prepare(`${APPT_SELECT} ORDER BY a.start_ms`).all();
   return (rows as Row[]).map(toAppointment);
 }
 
 export function findAppointment(id: string): Appointment | undefined {
-  const r = db().prepare("SELECT * FROM appointments WHERE id = ?").get(id) as Row | undefined;
+  const r = db().prepare(`${APPT_SELECT} WHERE a.id = ?`).get(id) as Row | undefined;
   return r ? toAppointment(r) : undefined;
 }
 
