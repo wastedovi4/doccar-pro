@@ -88,7 +88,7 @@ const photo = (x: Dict) => ({ src: safeImageUrl(x.src), alt: str(x.alt) });
 function blockData(type: BlockType, b: Dict) {
   switch (type) {
     case "services":
-      return { title: str(b.title), items: list(b.items, services) };
+      return { title: str(b.title), text: str(b.text), items: list(b.items, services) };
     case "features":
       return {
         title: str(b.title),

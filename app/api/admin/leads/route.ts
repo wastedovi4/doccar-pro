@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession, can } from "@/lib/auth";
-import { listLeads, updateLead } from "@/lib/crm";
+import { deleteLead, listLeads, updateLead } from "@/lib/crm";
 
 export const dynamic = "force-dynamic";
 
@@ -38,4 +38,22 @@ export async function PATCH(request: Request) {
 
   if (!lead) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   return NextResponse.json({ ok: true, lead });
+}
+
+/** Удалить заявку (спам, тест) — только владелец. Заявку с записью — только в архив. */
+export async function DELETE(request: Request) {
+  const s = await getSession();
+  if (!s || !can(s.role, "admin")) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  const id = new URL(request.url).searchParams.get("id") ?? "";
+  const res = deleteLead(id);
+  if (res === "not_found") return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  if (res === "has_appointment") {
+    return NextResponse.json(
+      { ok: false, error: "Из заявки создана запись — её можно только отправить в архив" },
+      { status: 409 }
+    );
+  }
+  return NextResponse.json({ ok: true });
 }

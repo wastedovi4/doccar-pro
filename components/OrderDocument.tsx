@@ -44,7 +44,7 @@ export function OrderDocument({
       {/* Шапка */}
       <header className="flex items-start justify-between gap-6 border-b-2 border-neutral-900 pb-4">
         <div className="flex items-center gap-3">
-          <LogoMark tone="tile" className="h-10 w-auto rounded bg-[#C6F34A] p-1" />
+          <LogoMark tone="tile" className="h-10 w-auto" />
           <div>
             <div className="text-lg font-extrabold tracking-wide">{business.name}</div>
             <div className="text-[11px] text-neutral-600">

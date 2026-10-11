@@ -49,7 +49,10 @@ node scripts/engine-sync.mjs ../Lenkrad --apply    # перенос из HEAD do
   `DEFAULT_BLOCKS` **по id раздела** (`brands`, `services`, `why`, `process`,
   `about`, `gallery`), данные — из старого контента.
 - **`components/Logo.tsx`** — `Logo` (полный, на тёмном фоне; шапка ЛК, онлайн-отчёт),
-  `LogoMark` (знак; админка, печать), `Wordmark` (название строкой; админка, вход).
+  `LogoMark({ className?, tone?: "dark" | "tile" })` — знак: `"dark"` (по умолчанию) на
+  тёмном фоне (админка, вход), `"tile"` — для белой бумаги (печать наряда); подложку,
+  если она нужна, рисует сам знак (у doccar — лаймовая плитка), движок цветов не задаёт;
+  `Wordmark({ className? })` — название строкой (админка, вход).
 - **`components/blocks/index.tsx`** — `BlockView({ block })` рисует **каждый** тип
   из `BLOCK_TYPES` (`lib/content-model.ts`). Switch с `default: const missing: never = block`
   — новый тип в движке без вёрстки ломает сборку, а не молча пропадает.
@@ -76,6 +79,10 @@ node scripts/engine-sync.mjs ../Lenkrad --apply    # перенос из HEAD do
 - **`public/og-image.png`, `public/icon-512.png`** — на них ссылается JSON-LD.
 - **`package.json`** — зависимости и `engines.node` как у движка (Node 24:
   встроенный `node:sqlite`).
+
+Имена кук — `dc_admin` (админка) и `dc_client` (ЛК): это имена движка, не бренда.
+Каждый сайт на своём домене, куки не пересекаются; переименование разлогинило бы
+всех на всех сайтах ради косметики.
 
 ## Данные
 

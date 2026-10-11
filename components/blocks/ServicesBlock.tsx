@@ -8,7 +8,7 @@ import { BlockHeading, BlockShell } from "@/components/blocks/BlockShell";
 export function ServicesBlock({ block }: { block: Data }) {
   return (
     <BlockShell anchor={block.anchor} tone={block.tone} label={block.title ? undefined : "Услуги"}>
-      <BlockHeading eyebrow={block.eyebrow} title={block.title} className="mb-10" />
+      <BlockHeading eyebrow={block.eyebrow} title={block.title} text={block.text} className="mb-10" />
       <div className="grid gap-5 md:grid-cols-3">
         {block.items.map((service, i) => {
           const Icon = resolveIcon(service.icon);

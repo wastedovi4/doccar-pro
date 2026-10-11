@@ -291,6 +291,21 @@ export function updateLead(
   });
 }
 
+/**
+ * Удалить заявку (спам, тест). Заявку, из которой создана запись, удалить нельзя —
+ * это история визита, её архивируют.
+ */
+export function deleteLead(id: string): "ok" | "not_found" | "has_appointment" {
+  return transaction((d) => {
+    const r = d.prepare("SELECT appointment_id FROM leads WHERE id = ?").get(id) as Row | undefined;
+    if (!r) return "not_found";
+    const linked = r.appointment_id || d.prepare("SELECT 1 FROM appointments WHERE lead_id = ? LIMIT 1").get(id);
+    if (linked) return "has_appointment";
+    d.prepare("DELETE FROM leads WHERE id = ?").run(id);
+    return "ok";
+  });
+}
+
 /* ---------- записи календаря ---------- */
 
 export function listAppointments(filter: { mechanicId?: string; clientId?: string } = {}): Appointment[] {

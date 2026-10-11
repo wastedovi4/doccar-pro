@@ -15,6 +15,7 @@ export const DEFAULT_BLOCKS: Block[] = [
     tone: "default",
     eyebrow: "",
     title: "",
+    text: "",
     items: [
       {
         icon: "monitor-pulse",

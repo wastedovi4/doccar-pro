@@ -58,7 +58,7 @@ type BlockBase = {
   eyebrow: string; // надзаголовок над заголовком раздела; "" — нет
 };
 
-export type ServicesBlock = BlockBase & { type: "services"; title: string; items: ServiceItem[] };
+export type ServicesBlock = BlockBase & { type: "services"; title: string; text: string; items: ServiceItem[] };
 export type FeaturesBlock = BlockBase & {
   type: "features";
   title: string; // переносы строк сохраняются
@@ -180,7 +180,7 @@ export function createBlock(type: BlockType): Block {
   const base = { id, visible: false, anchor: `${type}-${id.slice(0, 4)}`, menuLabel: "", tone: BLOCK_META[type].tone, eyebrow: "" };
   switch (type) {
     case "services":
-      return { ...base, type, title: "", items: [{ icon: "wrench", title: "Новая услуга", text: "", image: "" }] };
+      return { ...base, type, title: "", text: "", items: [{ icon: "wrench", title: "Новая услуга", text: "", image: "" }] };
     case "features":
       return { ...base, type, title: "Заголовок раздела", text: "", items: [{ icon: "badge", text: "Преимущество" }] };
     case "gallery":
@@ -242,7 +242,7 @@ export type Content = {
     email: string; // "" если нет
     whatsapp: string; // ссылка https://wa.me/…; "" если нет
     telegram: string; // ссылка https://t.me/…; "" если нет
-    city: string; // «Одинцово»
+    city: string; // «Москва»
     region: string; // «Московская область»
     street: string; // «ул. Такая-то, 1» ("" пока не уточнён — показываем город)
     workingHours: string;
@@ -279,7 +279,7 @@ export type Content = {
 /** Якоря, занятые самой страницей. */
 export const RESERVED_ANCHORS = ["top", "contacts", "booking", "contact-form"];
 
-/** Полный адрес одной строкой: «ул. …, г. Одинцово, Московская область». */
+/** Полный адрес одной строкой: «ул. …, г. Город, Область». */
 export function fullAddress(b: Content["business"]): string {
   return [b.street, b.city && `г. ${b.city}`, b.region].filter(Boolean).join(", ");
 }

@@ -6,7 +6,13 @@ const secret = crypto.randomBytes(32).toString("hex");
 const abc = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 let pw = "";
 for (let i = 0; i < 14; i++) pw += abc[crypto.randomInt(abc.length)];
-const login = "doccar";
+// Логин по умолчанию — из бренда (config/brand.ts: defaultAdminLogin).
+const brandSrc = fs.readFileSync(path.join(process.cwd(), "config", "brand.ts"), "utf8");
+const login = /defaultAdminLogin:\s*"([^"]+)"/.exec(brandSrc)?.[1];
+if (!login) {
+  console.error("Нет defaultAdminLogin в config/brand.ts");
+  process.exit(1);
+}
 
 const body = [
   "# Доступ в админку /admin (смените при желании)",

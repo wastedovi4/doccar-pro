@@ -8,5 +8,5 @@ export default async function RequestsPage() {
   const user = await getSession();
   if (!user) redirect("/admin/login");
   if (!can(user.role, "admin", "receiver")) redirect("/admin");
-  return <RequestsBoard />;
+  return <RequestsBoard canDelete={user.role === "admin"} />;
 }

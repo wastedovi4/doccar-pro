@@ -47,6 +47,7 @@ export function BlockFields({
             onChange={(title) => patch({ title })}
             hint="Можно оставить пустым — карточки идут без заголовка, как на макете."
           />
+          <Area label="Текст под заголовком" value={block.text} rows={2} onChange={(text) => patch({ text })} />
           <ItemList
             items={block.items}
             onChange={(items) => patch({ items })}

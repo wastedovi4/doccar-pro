@@ -144,7 +144,10 @@ if (brandTs) {
 const defaults = need("config/content-defaults.ts");
 if (defaults) exportsOf(defaults, ["DEFAULT_CONTENT", "DEFAULT_BLOCKS"], "config/content-defaults.ts");
 const logo = need("components/Logo.tsx");
-if (logo) exportsOf(logo, ["Logo", "LogoMark", "Wordmark"], "components/Logo.tsx");
+if (logo) {
+  exportsOf(logo, ["Logo", "LogoMark", "Wordmark"], "components/Logo.tsx");
+  if (!/["']tile["']/.test(logo)) problems.push(`components/Logo.tsx: LogoMark не поддерживает tone="tile" (знак для печати на белом)`);
+}
 const view = need("components/blocks/index.tsx");
 if (view) {
   exportsOf(view, ["BlockView"], "components/blocks/index.tsx");

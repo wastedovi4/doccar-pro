@@ -12,6 +12,7 @@ import {
   CalendarPlus,
   Clock,
   Circle,
+  Trash2,
 } from "lucide-react";
 import type { Lead, LeadStatus } from "@/lib/crm-types";
 import { AppointmentModal, type StaffLite } from "@/components/admin/AppointmentModal";
@@ -33,7 +34,8 @@ function fmt(iso: string) {
   });
 }
 
-export function RequestsBoard() {
+/** Запросы с сайта. canDelete — владелец: удалять спам/тестовые заявки (без записи). */
+export function RequestsBoard({ canDelete = false }: { canDelete?: boolean }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [staff, setStaff] = useState<StaffLite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +58,16 @@ export function RequestsBoard() {
     const t = setInterval(load, 15000); // авто-обновление списка запросов
     return () => clearInterval(t);
   }, []);
+
+  async function remove(lead: Lead) {
+    if (!confirm(`Удалить заявку «${lead.name}» безвозвратно? Для обычных заявок есть архив.`)) return;
+    const r = await fetch(`/api/admin/leads?id=${encodeURIComponent(lead.id)}`, { method: "DELETE" });
+    const d = await r.json().catch(() => ({}));
+    if (d.ok) {
+      setLeads((ls) => ls.filter((l) => l.id !== lead.id));
+      setExpanded(null);
+    } else alert(d.error || "Не удалось удалить");
+  }
 
   async function patch(id: string, body: Record<string, unknown>) {
     const res = await fetch("/api/admin/leads", {
@@ -213,6 +225,11 @@ export function RequestsBoard() {
                       ) : (
                         <button onClick={() => patch(lead.id, { status: "seen" })} className="btn-outline-light">
                           Вернуть из архива
+                        </button>
+                      )}
+                      {canDelete && !lead.appointmentId && (
+                        <button onClick={() => remove(lead)} className="btn-outline-light text-red-600 hover:border-red-300">
+                          <Trash2 className="h-4 w-4" aria-hidden /> Удалить
                         </button>
                       )}
                     </div>

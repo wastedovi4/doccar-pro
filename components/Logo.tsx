@@ -12,10 +12,17 @@ const PULSE =
 const TONES = {
   // на тёмном фоне: светлая D, лаймовый пульс, ореол цвета фона
   dark: { d: "#E8ECEF", pulse: "#C6F34A", halo: "#101318" },
-  // на лаймовой плитке: всё тёмное, ореол лаймовый
+  // на белом (печать): тёмный знак на лаймовой плитке, ореол лаймовый
   tile: { d: "#101318", pulse: "#101318", halo: "#C6F34A" },
 } as const;
 
+/** Плитка под знаком для tone="tile": скруглённый лаймовый квадрат с полем вокруг знака. */
+const TILE_BOX = "-12 -4 139 108";
+
+/**
+ * Знак. Контракт движка (docs/ENGINE.md): tone="dark" (по умолчанию) — на тёмном
+ * фоне; tone="tile" — для белой бумаги (печать наряда), подложку рисует сам знак.
+ */
 export function LogoMark({
   tone = "dark",
   className = "",
@@ -25,7 +32,8 @@ export function LogoMark({
 }) {
   const c = TONES[tone];
   return (
-    <svg viewBox="-2 6 119 88" className={className} aria-hidden focusable="false">
+    <svg viewBox={tone === "tile" ? TILE_BOX : "-2 6 119 88"} className={className} aria-hidden focusable="false">
+      {tone === "tile" && <rect x="-12" y="-4" width="139" height="108" rx="14" fill="#C6F34A" />}
       <path d={D_PATH} fill={c.d} />
       {[TAIL, PULSE].map((pts) => (
         <polygon key={pts.length} points={pts} fill={c.halo} stroke={c.halo} strokeWidth={3.2} strokeLinejoin="round" />
